@@ -1,6 +1,6 @@
 USER_PREFERENCES = """
-I am early career / new grad looking to break into AI engineering.
 I am currently working as a programmer in biotech, and am interested in how AI is being applied in biotech and health.
+I am early career / new grad looking to break into AI engineering.
 I am interested in:
 - Early career / new grad in AI
 - Career advice for new grads and early career professionals in data and AI

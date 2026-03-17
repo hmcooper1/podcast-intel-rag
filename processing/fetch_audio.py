@@ -5,9 +5,10 @@ import re
 from datetime import datetime, timedelta, timezone
 from podcasts import PODCASTS
 
-# config
+# Config -----------------------------------------------------
 OUTPUT_DIR = "episodes"
 DAYS_BACK = 7
+# ------------------------------------------------------------
 
 def sanitize_filename(title: str) -> str:
     """Remove special characters from episode title for use as filename"""

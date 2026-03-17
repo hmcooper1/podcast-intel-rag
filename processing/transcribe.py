@@ -1,9 +1,11 @@
 import whisper
 import os
 
+# Config -----------------------------------------------------
 EPISODES_DIR = "episodes"
 TRANSCRITS_DIR = "transcripts"
 MODEL_SIZE = "base"  # tiny, base, small, medium, large
+# ------------------------------------------------------------
 
 def load_model(model_size: str) -> whisper.Whisper:
     print(f"Loading Whisper model: {model_size}")
