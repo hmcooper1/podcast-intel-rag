@@ -1,1 +1,1 @@
-# Rag-Podcast-Intel
+# podcast-intel-rag
