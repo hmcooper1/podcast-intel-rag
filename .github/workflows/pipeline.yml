@@ -19,7 +19,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install ffmpeg (required by Whisper) # not a python package so have to install separately
-        run: sudo apt-get install -y ffmpeg
+        run: sudo apt-get install -y --fix-missing ffmpeg
 
       - name: Install dependencies
         run: pip install -r requirements.txt
