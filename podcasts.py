@@ -1,4 +1,4 @@
-# all podcast metadata
+# all podcast metadata (list of dicts)
 
 PODCASTS = [
     {

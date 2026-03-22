@@ -1,0 +1,34 @@
+name: Weekly Podcast Pipeline
+
+on:
+  schedule:
+    - cron: "0 23 * * 6"   # every saturday at 11pm UTC
+  workflow_dispatch:       # creates "run workflow" button to allow manual runs from the github ui
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest # ubuntu virtual machine provided by github actions
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4 # clones repo in local machine so it can be used in the workflow
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ffmpeg (required by Whisper) # not a python package so have to install separately
+        run: sudo apt-get install -y ffmpeg
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run pipeline
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python run_pipeline.py

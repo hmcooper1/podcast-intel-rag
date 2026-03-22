@@ -1,4 +1,5 @@
 import os
+import json
 from dotenv import load_dotenv
 from openai import OpenAI
 from supabase import create_client
@@ -8,6 +9,7 @@ load_dotenv(dotenv_path=".env")
 
 # Config -----------------------------------------------------
 TRANSCRIPTS_DIR = "transcripts"
+METADATA_DIR = "metadata"
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 50
 EMBEDDING_MODEL = "text-embedding-3-small"
@@ -70,6 +72,20 @@ def embed_transcript(filename: str):
     if not podcast:
         print(f"  Unknown podcast id: {podcast_id}, skipping")
         return
+    
+    # read metadata file for episode to get published date and duration (if exists)
+    metadata_filename = filename.replace(".txt", ".json")
+    metadata_path = os.path.join(METADATA_DIR, metadata_filename)
+    published_date = None
+    duration_seconds = None
+
+    if os.path.exists(metadata_path):
+        with open(metadata_path, "r") as f:
+            metadata = json.load(f)
+        published_date = metadata.get("published_date")
+        duration_seconds = metadata.get("duration_seconds")
+    else:
+        print(f"  No metadata found for {filename}")
  
     # read transcript
     filepath = os.path.join(TRANSCRIPTS_DIR, filename)
@@ -88,12 +104,21 @@ def embed_transcript(filename: str):
             "podcast_name": podcast["name"],
             "category": podcast["category"],
             "episode_title": episode_title,
+            "published_date": published_date,
+            "episode_duration": duration_seconds,
             "chunk_index": i,
             "chunk_text": chunk,
             "embedding": embedding,
         }).execute()
  
     print(f"  Embedded and stored {len(chunks)} chunks")
+
+    # clean up local files — everything is now in supabase
+    os.remove(filepath)
+    print(f"  Deleted transcript: {filepath}")
+    if os.path.exists(metadata_path):
+        os.remove(metadata_path)
+        print(f"  Deleted metadata: {metadata_path}")
 
 def main():
     txt_files = [f for f in os.listdir(TRANSCRIPTS_DIR) if f.endswith(".txt")]

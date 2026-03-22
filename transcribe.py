@@ -2,7 +2,7 @@ import whisper
 import os
 
 # Config -----------------------------------------------------
-EPISODES_DIR = "episodes"
+EPISODES_DIR = "audio"
 TRANSCRITS_DIR = "transcripts"
 MODEL_SIZE = "base"  # tiny, base, small, medium, large
 # ------------------------------------------------------------

@@ -2,11 +2,13 @@ import feedparser # for parsing RSS feeds
 import requests
 import os
 import re
+import json
 from datetime import datetime, timedelta, timezone
 from podcasts import PODCASTS
 
 # Config -----------------------------------------------------
-OUTPUT_DIR = "episodes"
+OUTPUT_DIR = "audio"
+METADATA_DIR = "metadata"
 DAYS_BACK = 7
 # ------------------------------------------------------------
 
@@ -26,8 +28,26 @@ def is_recent(entry: feedparser.FeedParserDict, cutoff: datetime) -> bool:
     pub_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
     return pub_date >= cutoff
 
+def parse_duration(raw: str) -> int:
+    """Convert duration to seconds. Handles both 'HH:MM:SS' and raw seconds formats."""
+    if not raw:
+        return None
+    if ":" in raw:
+        # HH:MM:SS or MM:SS format
+        parts = raw.strip().split(":")
+        parts = [int(p) for p in parts]
+        if len(parts) == 3:
+            return parts[0] * 3600 + parts[1] * 60 + parts[2]
+        elif len(parts) == 2:
+            return parts[0] * 60 + parts[1]
+    return int(raw)  # raw seconds
+
 def download_episode(entry: feedparser.FeedParserDict, podcast_id: str, output_dir: str) -> str:
-    """Download a single episode mp3, returns path to saved file"""
+    """
+    1: Download a single episode mp3, returns path to saved file.
+    2: Download metadata for episode: title, episode, publication date, duration.
+    """
+    # 1: grab audio url and create filepath: audio/{podcast_id}__{sanitized_title}.mp3
     if not entry.get("enclosures"):
         print(f"    Skipping (no audio): {entry.title}")
         return None
@@ -48,6 +68,21 @@ def download_episode(entry: feedparser.FeedParserDict, podcast_id: str, output_d
             f.write(chunk)
 
     print(f"    Saved: {filepath}")
+
+    # 2: save metadata to a JSON file with the same name but .json extension
+    pub_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc).date().isoformat()
+    duration = parse_duration(entry.get("itunes_duration"))
+    metadata = {
+        "podcast_id": podcast_id,
+        "episode_title": entry.title,
+        "published_date": pub_date,
+        "duration_seconds": duration
+    }
+    os.makedirs(METADATA_DIR, exist_ok=True)
+    metadata_path = os.path.join(METADATA_DIR, filename.replace(".mp3", ".json"))
+    with open(metadata_path, "w") as f:
+        json.dump(metadata, f)
+
     return filepath
 
 def fetch_recent_episodes(podcast: dict, cutoff: datetime, output_dir: str):
