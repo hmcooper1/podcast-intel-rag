@@ -94,20 +94,14 @@ def score_episodes(chunks: list[dict]) -> dict:
     return dict(sorted(episodes.items(), key=lambda x: x[1]["score"], reverse=True))
 
 def get_all_episodes() -> dict:
-    """Fetch all distinct episodes from the past DAYS_BACK days from Supabase."""
+    """Fetch all distinct episodes from the past DAYS_BACK days from the episodes table."""
     cutoff = (datetime.now(timezone.utc) - timedelta(days=DAYS_BACK)).date().isoformat()
-    result = supabase.table("chunks").select(
+    result = supabase.table("episodes").select(
         "episode_title, podcast_name"
     ).gte("published_date", cutoff).execute()
-    
-    # deduplicate by episode title
-    episodes = {}
-    for row in result.data:
-        title = row["episode_title"]
-        if title not in episodes:
-            episodes[title] = row["podcast_name"]
-    
-    return episodes
+
+    # episodes table has one row per episode so no deduplication needed
+    return {row["episode_title"]: row["podcast_name"] for row in result.data}
 
 def get_top_episode_recommendations(episodes: dict, preferences: str) -> str:
     """
@@ -137,7 +131,7 @@ Below are the most relevant podcast episodes this week, ranked by how many
 chunks matched the user's interests. Each episode shows its relevance score
 and excerpts from the matching chunks.
  
-Select the top {TOP_N_EPISODES} episodes most valuable for this user.
+Select the top {TOP_N_EPISODES} DISTINCT episodes most valuable for this user — do not recommend the same episode more than once.
 For each, explain SPECIFICALLY why it matches their interests — reference
 both the episode content AND their stated preferences.
  

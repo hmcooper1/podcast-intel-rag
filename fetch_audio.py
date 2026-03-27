@@ -76,7 +76,8 @@ def download_episode(entry: feedparser.FeedParserDict, podcast_id: str, output_d
         "podcast_id": podcast_id,
         "episode_title": entry.title,
         "published_date": pub_date,
-        "duration_seconds": duration
+        "duration_seconds": duration,
+        "description": entry.get("summary", "")
     }
     os.makedirs(METADATA_DIR, exist_ok=True)
     metadata_path = os.path.join(METADATA_DIR, filename.replace(".mp3", ".json"))

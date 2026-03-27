@@ -132,3 +132,4 @@ PODCASTS = [
 # lookups
 INTERVIEW_PODCASTS = [p for p in PODCASTS if p["category"] == "interview"]
 NEWS_PODCASTS = [p for p in PODCASTS if p["category"] == "news"]
+PODCASTS = [p for p in PODCASTS if p["id"] == "hard_fork"]  # TEMP: only fetch hard fork for now

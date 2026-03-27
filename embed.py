@@ -43,9 +43,10 @@ def get_embedding(text: str) -> list[float]:
     return response.data[0].embedding
 
 def already_embedded(episode_title: str) -> bool:
-    """Check if an episode has already been embedded in Supabase."""
-    # supabase query: SELECT id FROM chunks WHERE episode_title = {episode_title} LIMIT 1
-    result = supabase.table("chunks").select("id").eq("episode_title", episode_title).limit(1).execute()
+    """Check if an episode has already been embedded by looking it up in the episodes table.
+    If a row exists in episodes, chunks were already inserted for it.
+    """
+    result = supabase.table("episodes").select("id").eq("episode_title", episode_title).limit(1).execute()
     return len(result.data) > 0
 
 def parse_filename(filename: str) -> tuple[str, str]:
@@ -79,38 +80,48 @@ def embed_transcript(filename: str):
     published_date = None
     duration_seconds = None
 
+    description = None
     if os.path.exists(metadata_path):
         with open(metadata_path, "r") as f:
             metadata = json.load(f)
         published_date = metadata.get("published_date")
         duration_seconds = metadata.get("duration_seconds")
+        description = metadata.get("description")
     else:
         print(f"  No metadata found for {filename}")
- 
+
+    # insert episode into episodes table, get back the id
+    episode_row = supabase.table("episodes").insert({
+        "podcast_id": podcast_id,
+        "podcast_name": podcast["name"],
+        "category": podcast["category"],
+        "episode_title": episode_title,
+        "published_date": published_date,
+        "duration_seconds": duration_seconds,
+        "description": description,
+    }).execute()
+    episode_id = episode_row.data[0]["id"]
+
     # read transcript
     filepath = os.path.join(TRANSCRIPTS_DIR, filename)
     with open(filepath, "r") as f:
         text = f.read()
- 
+
     chunks = chunk_text(text, CHUNK_SIZE, CHUNK_OVERLAP)
     print(f"  Split into {len(chunks)} chunks")
- 
+
     # embed each chunk and store in Supabase
     for i, chunk in enumerate(chunks):
         embedding = get_embedding(chunk)
- 
+
+        # only store chunk-specific data — episode metadata lives in the episodes table
         supabase.table("chunks").insert({
-            "podcast_id": podcast_id,
-            "podcast_name": podcast["name"],
-            "category": podcast["category"],
-            "episode_title": episode_title,
-            "published_date": published_date,
-            "episode_duration": duration_seconds,
+            "episode_id": episode_id,
             "chunk_index": i,
             "chunk_text": chunk,
             "embedding": embedding,
         }).execute()
- 
+
     print(f"  Embedded and stored {len(chunks)} chunks")
 
     # clean up local files — everything is now in supabase
