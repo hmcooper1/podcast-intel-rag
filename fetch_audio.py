@@ -93,7 +93,8 @@ def fetch_recent_episodes(podcast: dict, cutoff: datetime, output_dir: str):
 
     for entry in feed.entries:
         if not is_recent(entry, cutoff):
-            break  # RSS is newest-first, so we can stop here
+            # some feeds are not in order, so don't break, just skip old episodes
+            continue
 
         download_episode(entry, podcast["id"], output_dir)
         downloaded += 1
