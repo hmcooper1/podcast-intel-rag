@@ -104,7 +104,7 @@ PODCASTS = [
         "name": "Training Data",
         "description": "Conversations about AI, data, and the people building it",
         "category": "interview",
-        "hosts": [],
+        "hosts": ["Sonya Huang", "Pat Grady"],
         "rss_feed": "https://feeds.megaphone.fm/trainingdata",
     },
     {
@@ -112,7 +112,7 @@ PODCASTS = [
         "name": "Mixture of Experts",
         "description": "IBM's podcast on AI research and enterprise applications",
         "category": "interview",
-        "hosts": [],
+        "hosts": ["Tim Hwang"],
         "rss_feed": "https://feeds.casted.us/95/Mixture-of-Experts-0d38e236/feed",
     },
     {
@@ -120,7 +120,7 @@ PODCASTS = [
         "name": "The MAD Podcast",
         "description": "Machine learning, AI and data discussions",
         "category": "interview",
-        "hosts": [],
+        "hosts": ["Matt Turck"],
         "rss_feed": "https://anchor.fm/s/f2ee4948/podcast/rss",
     },
     {
@@ -128,7 +128,7 @@ PODCASTS = [
         "name": "High Signal",
         "description": "Cutting through AI hype with practical signal",
         "category": "interview",
-        "hosts": [],
+        "hosts": ["Hugo Browne-Anderson"],
         "rss_feed": "https://feeds.fireside.fm/highsignal/rss",
     },
     {
@@ -136,7 +136,7 @@ PODCASTS = [
         "name": "The AI Policy Podcast",
         "description": "Discussions on AI governance, regulation and policy",
         "category": "news",
-        "hosts": [],
+        "hosts": ["Gregory C. Allen"],
         "rss_feed": "https://feeds.megaphone.fm/CSIS8973369418",
     },
     {
