@@ -2,6 +2,7 @@
 
 PODCASTS = [
     {
+    # interview style -------------------------------------
         "id": "dataframed",
         "name": "DataFramed",
         "description": "Interviews with data professionals and leaders on AI and data topics",
@@ -131,6 +132,8 @@ PODCASTS = [
         "hosts": ["Hugo Browne-Anderson"],
         "rss_feed": "https://feeds.fireside.fm/highsignal/rss",
     },
+
+# news ------------------------------------------------
     {
         "id": "ai_policy_podcast",
         "name": "The AI Policy Podcast",
@@ -180,3 +183,42 @@ PODCASTS = [
 # lookups
 INTERVIEW_PODCASTS = [p for p in PODCASTS if p["category"] == "interview"]
 NEWS_PODCASTS = [p for p in PODCASTS if p["category"] == "news"]
+
+
+# podcasts to fetch descriptions from for dad recommendation section
+# descriptions only, fetched directly from RSS at digest time, not transcribed or embedded
+# hard fork included above and here - tech and politics angle
+DAD_PODCASTS = [
+    {
+        "id": "hard_fork_dad",
+        "name": "Hard Fork",
+        "description": "Weekly tech and AI news by tech journalists",
+        "release_schedule": "Weekly on Friday",
+        "hosts": ["Kevin Roose", "Casey Newton"],
+        "rss_feed": "https://feeds.simplecast.com/l2i9YnTd",
+    },
+    {
+        "id": "the_daily",
+        "name": "The Daily",
+        "description": "Daily news stories",
+        "release_schedule": "Daily",
+        "hosts": ["Michael Barbaro", "Rachel Abrams", "Natalie Kitroeff"],
+        "rss_feed": "https://feeds.simplecast.com/Sl5CSM3S",
+    },
+    {
+        "id": "strict_scrutiny",
+        "name": "Strict Scrutiny",
+        "description": "About the US Supreme Court and the legal culture that surrounds it",
+        "release_schedule": "Weekly on Monday",
+        "hosts": ["Leah Litman", "Kate Shaw", "Melissa Murray"],
+        "rss_feed": "https://audioboom.com/channels/5166629.rss",
+    },
+    {
+        "id": "ezra_klein_show",
+        "name": "The Ezra Klein Show",
+        "description": "Political opinions and long-form interviews on politics, policy, and ideas",
+        "release_schedule": "Biweekly on Tuesday and Friday",
+        "hosts": ["Ezra Klein"],
+        "rss_feed": "https://feeds.simplecast.com/kEKXbjuJ",
+    },
+]

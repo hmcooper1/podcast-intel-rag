@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from supabase import create_client
 from preferences import USER_PREFERENCES, SEARCH_QUERIES
+from podcasts import DAD_PODCASTS
+import feedparser
 from html.parser import HTMLParser
 # simple mail transfer protocol library for sending emails
 import smtplib
@@ -102,7 +104,70 @@ Episodes:
     return response.choices[0].message.content
 
 # ------------------------------------------------------------
-# 2: Pick top 3 episodes for my interests
+# 2: Dad recommendation
+# ------------------------------------------------------------
+def get_dad_descriptions() -> list[dict]:
+    """
+    Fetch episode titles and descriptions from the last DAYS_BACK days
+    directly from each DAD_PODCASTS RSS feed.
+    Returns a list of dicts with 'episode_title', 'podcast_name', 'description'.
+    """
+    episodes = []
+    cutoff = datetime.now(timezone.utc) - timedelta(days=DAYS_BACK)
+
+    for podcast in DAD_PODCASTS:
+        feed = feedparser.parse(podcast["rss_feed"])
+        for entry in feed.entries:
+            # skip episodes older than the cutoff
+            pub_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
+            if pub_date < cutoff:
+                continue
+            episodes.append({
+                "episode_title": entry.get("title", ""),
+                "podcast_name": podcast["name"],
+                # descriptions are often in 'summary' for these feeds
+                "description": entry.get("summary", ""),
+            })
+            
+    return episodes
+
+
+def generate_dad_recommendation(episodes: list[dict]) -> str:
+    """
+    Look at descriptions from the dad podcast RSS feeds and write a short
+    paragraph recommending the episode(s) where tech/AI intersects with
+    politics, law, or society.
+    """
+    episodes_text = ""
+    for ep in episodes:
+        clean_desc = strip_html(ep.get("description") or "")
+        episodes_text += f"### {ep['episode_title']} ({ep['podcast_name']})\n{clean_desc}\n\n"
+
+    prompt = f"""You are helping find the most interesting podcast episode from the past week
+for someone who is interested in where technology and AI intersect with politics, law, and society.
+Below are episode descriptions from several podcasts. Pick exactly one episode that best covers
+this intersection and write 2-3 sentences about it. Name the episode and podcast, explain
+what the tech/politics angle is, and why it's worth listening to. Do not use first-person language
+like "I recommend" — just describe the episode directly. If nothing this week has a strong
+tech/politics angle, pick the most interesting political or policy story and briefly note its
+relevance to tech.
+
+Only report what is explicitly mentioned in the descriptions - do not infer or make anything up.
+Ignore sponsor mentions, timestamps, URLs, social media handles, and newsletter plugs.
+
+Episodes:
+{episodes_text}"""
+
+    response = openai_client.chat.completions.create(
+        model=LLM_MODEL,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.3
+    )
+    return response.choices[0].message.content
+
+
+# ------------------------------------------------------------
+# 3: Pick top 3 episodes for my interests
 # ------------------------------------------------------------
 def get_embedding(text: str) -> list[float]:
     """Get embedding vector from OpenAI for a chunk of text."""
@@ -212,8 +277,8 @@ chunks matched the user's interests. Each episode shows its relevance score
 and excerpts from the matching chunks.
  
 Select the top {TOP_N_EPISODES} DISTINCT episodes most valuable for this user
-Do not recommend the same episode more than once.
-Do not recommend two episodes from the same podcast if one of them is already in the top {TOP_N_EPISODES}, unless there are not enough distinct podcasts in the list.
+DO NOT recommend the same episode more than once.
+DO NOT recommend two episodes from the same podcast if one of them is already in the top {TOP_N_EPISODES}.
 For each, explain SPECIFICALLY why it matches their interests — reference
 both the episode content AND their stated preferences.
  
@@ -262,10 +327,10 @@ def render_rec_block(block: dict) -> str:
         f'</div>'
     )
 
-def build_html_email(week_of: str, recommendations: str, episode_list: str, weekly_summary: str = "") -> str:
+def build_html_email(week_of: str, recommendations: str, episode_list: str, weekly_summary: str = "", dad_recommendation: str = "", dad_episodes: list = None) -> str:
     """
     Convert the digest content into a pretty HTML email string.
-    Takes the three main pieces of content already built in
+    Takes the main pieces of content already built in
     generate_digest() and wraps them in HTML/CSS.
     """
 
@@ -340,7 +405,18 @@ def build_html_email(week_of: str, recommendations: str, episode_list: str, week
             )
 
     # --------------------------
-    # C: create the full HTML document
+    # C: build dad episode rows (dimmed italic list, one row per episode)
+    dad_rows_html = ""
+    for ep in (dad_episodes or []):
+        dad_rows_html += (
+            f'<tr>'
+            f'<td style="padding:6px 12px;color:#bbb;width:28px;vertical-align:top;">—</td>'
+            f'<td style="padding:6px 12px;color:#aaa;font-size:13px;font-style:italic;">{ep["episode_title"]} ({ep["podcast_name"]})</td>'
+            f'</tr>'
+        )
+
+    # --------------------------
+    # D: create the full HTML document
     # use <table> tags instead of <div> tags to be safer for email clients
 
     return f"""<!DOCTYPE html>
@@ -395,6 +471,16 @@ def build_html_email(week_of: str, recommendations: str, episode_list: str, week
           </td>
         </tr>
 
+        <!-- ── DAD RECOMMENDATION ── -->
+        <tr>
+          <td style="padding:8px 40px 24px;">
+            <div style="background:#f5f5f7;border-radius:0 8px 8px 0;border-left:4px solid #6c63ff;padding:20px 24px;">
+              <div style="font-size:11px;font-weight:700;color:#6c63ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">Dad's pick this week</div>
+              <p style="font-size:14px;color:#444;line-height:1.7;margin:0;">{dad_recommendation}</p>
+            </div>
+          </td>
+        </tr>
+
         <!-- ── ALL EPISODES ── -->
         <tr>
           <td style="padding:8px 40px 36px;">
@@ -402,6 +488,18 @@ def build_html_email(week_of: str, recommendations: str, episode_list: str, week
             <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
               <tbody>
                 {ep_rows_html}
+              </tbody>
+            </table>
+          </td>
+        </tr>
+
+        <!-- ── DAD'S EPISODES ── -->
+        <tr>
+          <td style="padding:0 40px 36px;">
+            <div style="font-size:11px;font-weight:700;color:#aaa;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;">Dad's episodes this week</div>
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+              <tbody>
+                {dad_rows_html}
               </tbody>
             </table>
           </td>
@@ -455,37 +553,44 @@ def generate_digest():
  
     Workflow:
     1. Fetch news episode descriptions and generate weekly AI summary
-    2. Run multi-query search to find relevant chunks
-    3. Score episodes by chunk count (weighted by priority)
-    4. Ask LLM to pick top 3 (send top 6) and explain why
-    5. Build episode list (scored + unscored)
-    6. Combine into digest string and email it
+    2. Fetch dad podcast descriptions and generate episode recommendation
+    3. Run multi-query search to find relevant chunks
+    4. Score episodes by chunk count (weighted by priority)
+    5. Ask LLM to pick top 3 (send top 6) and explain why
+    6. Build episode list (scored + unscored)
+    7. Combine into digest string and email it
     """
     week_of = datetime.now().strftime("%B %d, %Y")
 
     # 1: fetch news episode descriptions and generate weekly summary
     print("Fetching news episode descriptions...")
     news_episodes = get_news_descriptions()
-    print(f"Found {len(news_episodes)} news episodes — generating summary...\n")
+    print(f"  Found {len(news_episodes)} news episodes - generating summary...\n")
     weekly_summary = generate_weekly_summary(news_episodes)
 
-    # 2: run all search queries and collect chunks
+    # 2: fetch dad podcast descriptions and generate recommendation
+    print("Fetching dad podcast descriptions...")
+    dad_episodes = get_dad_descriptions()
+    print(f"  Found {len(dad_episodes)} dad podcast episodes - generating recommendation...\n")
+    dad_rec = generate_dad_recommendation(dad_episodes)
+
+    # 3: run all search queries and collect chunks
     print(f"Running {len(SEARCH_QUERIES)} preference searches...\n")
     all_chunks = search_all_queries(SEARCH_QUERIES)
     print(f"Found {len(all_chunks)} unique relevant chunks\n")
 
-    # 3: score episodes by how many chunks matched
+    # 4: score episodes by how many chunks matched
     print("Scoring episodes...")
     scored_episodes = score_episodes(all_chunks)
     for title, data in list(scored_episodes.items())[:TOP_EPISODES_TO_LLM]:
         print(f"  {data['score']} chunks — {title[:60]}")
     print()
 
-    # 4: ask LLM to pick top 3 from highest scoring episodes (6)
+    # 5: ask LLM to pick top 3 from highest scoring episodes (6)
     print("Generating recommendations...")
     recommendations = get_top_episode_recommendations(scored_episodes, USER_PREFERENCES)
 
-    # 5: build full episode list - scored first (in order), then unscored at the bottom
+    # 6: build full episode list - scored first (in order), then unscored at the bottom
     all_episodes = get_all_episodes()
     episode_list = ""
     for i, (title, data) in enumerate(scored_episodes.items(), start=1):
@@ -495,7 +600,7 @@ def generate_digest():
     for title in unscored:
         episode_list += f"- {title} ({all_episodes[title]})\n"
 
-    # 6: build full digest string (backup in case HTML cannot render)
+    # 7: build full digest string (backup in case HTML cannot render)
     digest = f"""
 =====================================
 PODCAST INTEL DIGEST: {week_of}
@@ -509,14 +614,18 @@ WHAT HAPPENED IN AI THIS WEEK
 -------------------------------------
 {weekly_summary}
 
+DAD'S PICK THIS WEEK
+-------------------------------------
+{dad_rec}
+
 ALL EPISODES THIS WEEK (by relevance)
 -------------------------------------
 {episode_list}
 =====================================
 """
 
-    # build the styled HTML version and send both (email client picks whichever it supports)
-    html_digest = build_html_email(week_of, recommendations, episode_list, weekly_summary)
+    # build the pretty html version and send both (email client picks whichever it supports)
+    html_digest = build_html_email(week_of, recommendations, episode_list, weekly_summary, dad_rec, dad_episodes)
     send_email(subject=f"Podcast Intel Digest for {week_of}", plain_body=digest, html_body=html_digest)
 
 if __name__ == "__main__":
