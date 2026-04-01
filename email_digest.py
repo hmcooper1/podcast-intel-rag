@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from supabase import create_client
 from preferences import USER_PREFERENCES, SEARCH_QUERIES
+from html.parser import HTMLParser
 # simple mail transfer protocol library for sending emails
 import smtplib
 # email structure libraries for formatting the email content
@@ -21,9 +22,88 @@ EMBEDDING_MODEL = "text-embedding-3-small"
 LLM_MODEL = "gpt-4o"
 # ------------------------------------------------------------
  
+# ------------------------------------------------------------
+# 1: News synthesis
+# ------------------------------------------------------------
+# get news descriptions, parse out text, and ask LLM to summarize the week's news in 4 sentences
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
 
+# built in python class for parsing html - use subclass to pull out text
+class StripHTML(HTMLParser):
+    """Pulls plain text out of an HTML string by ignoring all tags."""
+    def __init__(self):
+        super().__init__()
+        self.text = []
+
+    # htmlparser calls this method when it encounters text
+    def handle_data(self, data):
+        # add every piece of text to list
+        self.text.append(data)
+
+    def get_text(self):
+        return " ".join(self.text).strip()
+
+
+def strip_html(html: str) -> str:
+    parser = StripHTML()
+    parser.feed(html)
+    return parser.get_text()
+
+
+def get_news_descriptions() -> list[dict]:
+    """
+    Fetch episode title and description for all 'news' category episodes
+    from the last DAYS_BACK days.
+    Returns a list of dicts with 'episode_title', 'podcast_name', 'description'.
+    """
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=DAYS_BACK)).date().isoformat()
+
+    # eq: filter for category = news, gte: greater than or equal
+    result = supabase.table("episodes").select(
+        "episode_title, podcast_name, description"
+    ).eq("category", "news").gte("published_date", cutoff).execute()
+
+    return result.data
+
+
+def generate_weekly_summary(episodes: list[dict]) -> str:
+    """
+    Strip HTML from each description and ask the LLM to write
+    a one-paragraph summary of what happened in AI this week.
+    """
+    # build one block of text per episode: title, podcast name, and clean description
+    episodes_text = ""
+    for ep in episodes:
+        clean_desc = strip_html(ep.get("description") or "")
+        episodes_text += f"### {ep['episode_title']} ({ep['podcast_name']})\n{clean_desc}\n\n"
+
+    prompt = f"""You are summarizing AI news from the past week based on podcast episode descriptions.
+
+Below are descriptions from several AI news podcasts this week. Write one concise paragraph
+of exactly 4 sentences summarizing the biggest stories. Be specific - name actual models, companies,
+and announcements rather than speaking in generalities. When a story appears across multiple shows,
+explicitly make a small note of this (e.g. "mentioned across several podcasts") as those
+are the stories with the most traction. Only report what is explicitly mentioned — do not infer or fill
+in gaps. Do not use filler phrases like "gained attention", "was a key topic", "drew scrutiny",
+"sparked debate", or similar - just state the facts directly. Ignore any sponsor mentions, timestamps,
+URLs, email addresses, social media handles, newsletter plugs, and Patreon/Discord links. Pay attention
+to early careers, job market, hiring, healthcare, biotechnology, or pharma, but only mention them if they
+are explicitly discussed — do not bring them up if they are not mentioned.
+
+Episodes:
+{episodes_text}"""
+
+    response = openai_client.chat.completions.create(
+        model=LLM_MODEL,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.3  # lower = more factual, less creative
+    )
+    return response.choices[0].message.content
+
+# ------------------------------------------------------------
+# 2: Pick top 3 episodes for my interests
+# ------------------------------------------------------------
 def get_embedding(text: str) -> list[float]:
     """Get embedding vector from OpenAI for a chunk of text."""
     response = openai_client.embeddings.create(
@@ -159,6 +239,9 @@ Episodes:
     )
     return response.choices[0].message.content
 
+# ------------------------------------------------------------
+# 3: Build HTML email and send email functions
+# ------------------------------------------------------------
 def render_rec_block(block: dict) -> str:
     """
     Helper: turns one recommendation dict into an HTML card string for build_html_email.
@@ -179,15 +262,15 @@ def render_rec_block(block: dict) -> str:
         f'</div>'
     )
 
-def build_html_email(week_of: str, recommendations: str, episode_list: str) -> str:
+def build_html_email(week_of: str, recommendations: str, episode_list: str, weekly_summary: str = "") -> str:
     """
     Convert the digest content into a pretty HTML email string.
     Takes the three main pieces of content already built in
     generate_digest() and wraps them in HTML/CSS.
     """
 
-    # ------------------------------------------------------------
-    # 1: parse the recommendations string into structured blocks
+    # --------------------------
+    # A: parse the recommendations string into structured blocks
     # the LLM returns recommendations as plain text like:
     #   #1. Episode Title (Podcast Name)
     #   Why this is for you: ...
@@ -224,8 +307,8 @@ def build_html_email(week_of: str, recommendations: str, episode_list: str) -> s
     if current["title"]:
         rec_blocks_html += render_rec_block(current)
 
-    # ------------------------------------------------------------
-    # 2: build the episode list rows as HTML
+    # --------------------------
+    # B: build the episode list rows as HTML
     # scored episodes are "1. Title (Podcast)", unscored are "- Title (Podcast)"
 
     ep_rows_html = ""
@@ -256,8 +339,8 @@ def build_html_email(week_of: str, recommendations: str, episode_list: str) -> s
                 f'</tr>'
             )
 
-    # ------------------------------------------------------------
-    # 3: create the full HTML document
+    # --------------------------
+    # C: create the full HTML document
     # use <table> tags instead of <div> tags to be safer for email clients
 
     return f"""<!DOCTYPE html>
@@ -293,10 +376,22 @@ def build_html_email(week_of: str, recommendations: str, episode_list: str) -> s
         <!-- ── TOP PICKS ── -->
         <tr>
           <td style="padding:32px 40px 8px;">
-            <!-- section label: top 3 picks for you -->
-            <div style="font-size:11px;font-weight:700;color:#6c63ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:20px;">Top {TOP_N_EPISODES} picks for you</div>
+            <!-- section label: top 3 picks for me -->
+            <div style="font-size:11px;font-weight:700;color:#6c63ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:20px;">Top {TOP_N_EPISODES} picks for me</div>
             <!-- recommendation cards injected here -->
             {rec_blocks_html}
+          </td>
+        </tr>
+
+        <!-- ── WHAT HAPPENED IN AI THIS WEEK ── -->
+        <tr>
+          <td style="padding:8px 40px 24px;">
+            <!-- grey card with purple top border to visually separate from rec cards and episode list -->
+            <div style="background:#f5f5f7;border-radius:0 8px 8px 0;border-left:4px solid #6c63ff;padding:20px 24px;">
+              <div style="font-size:11px;font-weight:700;color:#6c63ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">What happened in AI this week</div>
+              <!-- summary paragraph from news podcast descriptions -->
+              <p style="font-size:14px;color:#444;line-height:1.7;margin:0;">{weekly_summary}</p>
+            </div>
           </td>
         </tr>
 
@@ -351,36 +446,46 @@ def send_email(subject: str, plain_body: str, html_body: str):
 
     print(f"Email sent to {gmail_address}!")
 
+# ------------------------------------------------------------
+# 4: Main function to run the whole pipeline and send the email
+# ------------------------------------------------------------
 def generate_digest():
     """
     Run the full recommendation pipeline and send as email.
  
     Workflow:
-    1. Run multi-query search to find relevant chunks
-    2. Score episodes by chunk count (weighted by priority)
-    3. Ask LLM to pick top 3 (send top 6) and explain why
-    4. Build episode list (scored + unscored)
-    5. Combine into digest string and email it
+    1. Fetch news episode descriptions and generate weekly AI summary
+    2. Run multi-query search to find relevant chunks
+    3. Score episodes by chunk count (weighted by priority)
+    4. Ask LLM to pick top 3 (send top 6) and explain why
+    5. Build episode list (scored + unscored)
+    6. Combine into digest string and email it
     """
     week_of = datetime.now().strftime("%B %d, %Y")
-    
-    # 1: run all search queries and collect chunks
+
+    # 1: fetch news episode descriptions and generate weekly summary
+    print("Fetching news episode descriptions...")
+    news_episodes = get_news_descriptions()
+    print(f"Found {len(news_episodes)} news episodes — generating summary...\n")
+    weekly_summary = generate_weekly_summary(news_episodes)
+
+    # 2: run all search queries and collect chunks
     print(f"Running {len(SEARCH_QUERIES)} preference searches...\n")
     all_chunks = search_all_queries(SEARCH_QUERIES)
     print(f"Found {len(all_chunks)} unique relevant chunks\n")
 
-    # 2: score episodes by how many chunks matched
+    # 3: score episodes by how many chunks matched
     print("Scoring episodes...")
     scored_episodes = score_episodes(all_chunks)
     for title, data in list(scored_episodes.items())[:TOP_EPISODES_TO_LLM]:
         print(f"  {data['score']} chunks — {title[:60]}")
     print()
 
-    # 3: ask LLM to pick top 3 from highest scoring episodes (6)
+    # 4: ask LLM to pick top 3 from highest scoring episodes (6)
     print("Generating recommendations...")
     recommendations = get_top_episode_recommendations(scored_episodes, USER_PREFERENCES)
 
-    # 4: build full episode list - scored first (in order), then unscored at the bottom
+    # 5: build full episode list - scored first (in order), then unscored at the bottom
     all_episodes = get_all_episodes()
     episode_list = ""
     for i, (title, data) in enumerate(scored_episodes.items(), start=1):
@@ -390,7 +495,7 @@ def generate_digest():
     for title in unscored:
         episode_list += f"- {title} ({all_episodes[title]})\n"
 
-    # 5: build full digest string (backup in case HTML cannot render)
+    # 6: build full digest string (backup in case HTML cannot render)
     digest = f"""
 =====================================
 PODCAST INTEL DIGEST: {week_of}
@@ -400,6 +505,10 @@ TOP {TOP_N_EPISODES} EPISODES FOR YOU THIS WEEK
 -------------------------------------
 {recommendations}
 
+WHAT HAPPENED IN AI THIS WEEK
+-------------------------------------
+{weekly_summary}
+
 ALL EPISODES THIS WEEK (by relevance)
 -------------------------------------
 {episode_list}
@@ -407,7 +516,7 @@ ALL EPISODES THIS WEEK (by relevance)
 """
 
     # build the styled HTML version and send both (email client picks whichever it supports)
-    html_digest = build_html_email(week_of, recommendations, episode_list)
+    html_digest = build_html_email(week_of, recommendations, episode_list, weekly_summary)
     send_email(subject=f"Podcast Intel Digest for {week_of}", plain_body=digest, html_body=html_digest)
 
 if __name__ == "__main__":
