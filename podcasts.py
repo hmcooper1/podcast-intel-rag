@@ -1,4 +1,5 @@
 # all podcast metadata (list of dicts)
+# one useful resource: https://github.com/foorilla/allainews_sources
 
 PODCASTS = [
     {
@@ -131,6 +132,33 @@ PODCASTS = [
         "category": "interview",
         "hosts": ["Hugo Browne-Anderson"],
         "rss_feed": "https://feeds.fireside.fm/highsignal/rss",
+    },
+    {
+        "id": "mlops_community",
+        "name": "MLOps.community",
+        "description": "Conversations about getting AI into production",
+        "category": "interview",
+        "release_schedule": "Weekly ish",
+        "hosts": ["Demitrios Brinkmann"],
+        "rss_feed": "https://anchor.fm/s/174cb1b8/podcast/rss",
+    },
+    {
+        "id": "eye_on_ai",
+        "name": "Eye on AI",
+        "description": "Tracks new developments in AI research",
+        "category": "interview",
+        "release_schedule": "Weekly ish",
+        "hosts": ["Craig S. Smith"],
+        "rss_feed": "https://aneyeonai.libsyn.com/rss",
+    },
+    {
+        "id": "datatalks_club",
+        "name": "DataTalks.Club",
+        "description": "Global online community of data professionals, ML engineers, AI practitioners",
+        "category": "interview",
+        "release_schedule": "Weekly on Fridays",
+        "hosts": ["Slawomir Tulski"],
+        "rss_feed": "https://anchor.fm/s/41286f68/podcast/rss",
     },
 
 # news ------------------------------------------------
