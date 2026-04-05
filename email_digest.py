@@ -5,8 +5,8 @@ from openai import OpenAI
 from supabase import create_client
 from preferences import USER_PREFERENCES, SEARCH_QUERIES
 from podcasts import DAD_PODCASTS
+from fetch_audio import strip_html
 import feedparser
-from html.parser import HTMLParser
 # simple mail transfer protocol library for sending emails
 import smtplib
 # email structure libraries for formatting the email content
@@ -23,35 +23,13 @@ TOP_EPISODES_TO_LLM = 6 # top scoring episodes to send to LLM
 EMBEDDING_MODEL = "text-embedding-3-small"
 LLM_MODEL = "gpt-4o"
 # ------------------------------------------------------------
- 
+
 # ------------------------------------------------------------
 # 1: News synthesis
 # ------------------------------------------------------------
 # get news descriptions, parse out text, and ask LLM to summarize the week's news in 4 sentences
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
-
-# built in python class for parsing html - use subclass to pull out text
-class StripHTML(HTMLParser):
-    """Pulls plain text out of an HTML string by ignoring all tags."""
-    def __init__(self):
-        super().__init__()
-        self.text = []
-
-    # htmlparser calls this method when it encounters text
-    def handle_data(self, data):
-        # add every piece of text to list
-        self.text.append(data)
-
-    def get_text(self):
-        return " ".join(self.text).strip()
-
-
-def strip_html(html: str) -> str:
-    parser = StripHTML()
-    parser.feed(html)
-    return parser.get_text()
-
 
 def get_news_descriptions() -> list[dict]:
     """
@@ -86,9 +64,9 @@ Below are descriptions from several AI news podcasts this week. Write one concis
 of exactly 4 sentences summarizing the biggest stories. Be specific - name actual models, companies,
 and announcements rather than speaking in generalities. When a story appears across multiple shows,
 explicitly make a small note of this (e.g. "mentioned across several podcasts") as those
-are the stories with the most traction. Only report what is explicitly mentioned — do not infer or fill
+are the stories with the most traction. Only report what is explicitly mentioned. Do not infer or fill
 in gaps. Do not use filler phrases like "gained attention", "was a key topic", "drew scrutiny",
-"sparked debate", or similar - just state the facts directly. Ignore any sponsor mentions, timestamps,
+"sparked debate", or similar, just state the facts directly. Ignore any sponsor mentions, timestamps,
 URLs, email addresses, social media handles, newsletter plugs, and Patreon/Discord links. Pay attention
 to early careers, job market, hiring, healthcare, biotechnology, or pharma, but only mention them if they
 are explicitly discussed — do not bring them up if they are not mentioned.
@@ -181,12 +159,15 @@ def search_query(query: str, limit: int = 10) -> list[dict]:
     """
     Embed a single query string and find the most similar chunks in Supabase.
     Total chunks returned is determined by the 'limit' parameter.
+    Only returns chunks from episodes published within the last DAYS_BACK days.
     Returns a list of chunk dicts with id, episode_title, podcast_name etc.
     """
     embedding = get_embedding(query)
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=DAYS_BACK)).date().isoformat()
     result = supabase.rpc("match_chunks", {
         "query_embedding": embedding,
-        "match_count": limit
+        "match_count": limit,
+        "cutoff_date": cutoff
     }).execute()
     return result.data
  
@@ -276,9 +257,9 @@ Below are the most relevant podcast episodes this week, ranked by how many
 chunks matched the user's interests. Each episode shows its relevance score
 and excerpts from the matching chunks.
  
-Select the top {TOP_N_EPISODES} DISTINCT episodes most valuable for this user
+Select the top {TOP_N_EPISODES} DISTINCT episodes most valuable for this user.
+STRICT RULE: Only ONE episode per podcast allowed across all {TOP_N_EPISODES} recommendations. No exceptions.
 DO NOT recommend the same episode more than once.
-DO NOT recommend two episodes from the same podcast if one of them is already in the top {TOP_N_EPISODES}.
 For each, explain SPECIFICALLY why it matches their interests — reference
 both the episode content AND their stated preferences.
  

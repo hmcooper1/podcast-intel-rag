@@ -4,6 +4,7 @@ import os
 import re
 import json
 from datetime import datetime, timedelta, timezone
+from html.parser import HTMLParser
 from podcasts import PODCASTS
 
 # Config -----------------------------------------------------
@@ -15,6 +16,26 @@ DAYS_BACK = 7
 def sanitize_filename(title: str) -> str:
     """Remove special characters from episode title for use as filename"""
     return re.sub(r"[^\w\s-]", "", title).strip().replace(" ", "_")
+
+# built in python class for parsing html - use subclass to pull out text
+class StripHTML(HTMLParser):
+    """Pulls plain text out of an HTML string by ignoring all tags."""
+    def __init__(self):
+        super().__init__()
+        self.text = []
+
+    # htmlparser calls this method when it encounters text
+    def handle_data(self, data):
+        # add every piece of text to list
+        self.text.append(data)
+
+    def get_text(self):
+        return " ".join(self.text).strip()
+
+def strip_html(html: str) -> str:
+    parser = StripHTML()
+    parser.feed(html)
+    return parser.get_text()
 
 def fetch_feed(rss_url: str) -> feedparser.FeedParserDict:
     """Fetch and parse the RSS feed"""
@@ -77,7 +98,7 @@ def download_episode(entry: feedparser.FeedParserDict, podcast_id: str, output_d
         "episode_title": entry.title,
         "published_date": pub_date,
         "duration_seconds": duration,
-        "description": entry.get("summary", "")
+        "description": strip_html(entry.get("summary", ""))
     }
     os.makedirs(METADATA_DIR, exist_ok=True)
     metadata_path = os.path.join(METADATA_DIR, filename.replace(".mp3", ".json"))
