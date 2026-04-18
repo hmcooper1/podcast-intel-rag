@@ -1,16 +1,16 @@
 # Podcast Intel RAG
 
-I absolutely love podcasts! They are how I stay up-to-date on everything I am interested in, from daily news (Up First by NPR and The Daily), biotechnology advancements (The Readout Loud), UK-specific news (Pod Save the UK, since I'm currently based in the UK), and health policy (Health Affairs This Week). Beyond being an avid daily and weekly listener to these shows, I have been obsessed with data & AI related content. I started out loving the DataFramed podcast by DataCamp, but stumbled upon other interesting shows (How I AI, The AI Daily Brief, and many more - see `podcasts.py`). It would take far too much time to listen to every episode from every podcast. Even manually searching up each podcast to see the titles and descriptions of all episodes for the week is extremely time consuming and unrealistic for 20+ shows (some of which post multiple times a week). Additionally, certain topics that are mentioned during the show (e.g. advice for earlier careers) likely wouldnt be in the description of the episode, but it something I would definitely want to listen to.
+I absolutely love podcasts! They are how I stay up-to-date on everything I am interested in, from daily news (Up First by NPR and The Daily), biotechnology advancements (The Readout Loud), UK-specific news (Pod Save the UK, since I'm currently based in the UK), and health policy (Health Affairs This Week). Beyond being an avid daily and weekly listener to these shows, I have been obsessed with data & AI related content. I started out loving the DataFramed podcast by DataCamp, but stumbled upon other interesting shows (How I AI, The AI Daily Brief, and many more - see `podcasts.py`). It would take far too much time to listen to every episode from every podcast. Even manually searching up each podcast to see the titles and descriptions of all episodes for the week is extremely time consuming and unrealistic for 20+ shows (some of which post multiple times a week). Additionally, certain topics that are mentioned during the show (e.g. advice for earlier careers) likely wouldn't be in the description of the episode, but it something I would definitely want to listen to.
 
 To solve my problem, I built this end-to-end RAG pipeline that injests transcripts from 20+ podcasts weekly, searches them based on my interests, and emails me the top 3 relevant episodes for me to listen to. The pipeline also generates a short summary of news topics that are mentioned across podcasts - giving me insight into the top AI stories and advancements. My dad is also an avid podcast listener, so I added his 4 favorite shows and have the digest recommend whichever episode that week we would relate the most on!
 
-Through this project, I have got hands-on experience with RAG systems, vector embeddings, and AI evaluation. It's been a really fun project to work on, and listening to my recommended podcasts has become one of my favorite parts of my weekly routine :-) I have been learning so many interesting things through these podcasts - from how tools like Claude Code and OpenClaw were built, to exciting AI applications in real-world evidence and SAS/R programming in pharma & biotechnology (my current role), to the latest agent frameworks and startups. The exposure to practical AI workflows has directly shaped how I work: I have been focused on developing reusable agent skills and workflows that I have been presenting to my colleagues to accelerate how our team works. It is honestly so much fun!!!
+Through this project, I have got hands-on experience with RAG systems, vector embeddings, and AI evaluation. It's been a really fun project to work on, and listening to my recommended podcasts has become one of my favorite parts of my weekly routine :) I have been learning so many interesting things through these podcasts - from how tools like Claude Code and OpenClaw were built, to exciting AI applications in real-world evidence and SAS/R programming in pharma & biotechnology (my current role), to the latest agent frameworks and startups. The exposure to practical AI workflows has directly shaped how I work: I have been focused on developing reusable agent skills and workflows that I have been presenting to my colleagues to accelerate how our team works. It is honestly so much fun!!!
 
 ## What it does
 
 Every week, the pipeline:
 
-1. Fetches new episodes from 23 AI/ML podcast RSS feeds
+1. Fetches new episodes from 20+ AI/ML podcast RSS feeds
 2. Downloads and transcribes audio using Whisper
 3. Chunks transcripts and stores embeddings in Supabase via pgvector
 4. Runs multi-query vector search weighted by my defined interests
@@ -21,16 +21,6 @@ Every week, the pipeline:
 9. Emails the digest with all episodes listed from most to least relevant, so I can easily skim titles and decide what else to listen to
 
 It also validates data quality after each run and emails an alert if anything looks off (missing fields, episodes with no chunks, etc.), and tracks retrieval quality over time using RAGAS context precision scoring.
-
-## Example digest
-
-![Email digest screenshot](docs/digest_screenshot.png)
-
-The email includes:
-- **Top 3 picks** with personalized explanations for why each episode fits my interests
-- **What happened in AI this week**: a 4-sentence synthesis from news podcasts
-- **Dad's pick**: a recommendation from news/politics podcasts for my dad and I to relate on
-- **All episodes this week** ranked by relevance score
 
 ## Stack
 
@@ -71,3 +61,15 @@ preferences.py        # my interests and search queries
 ## What's next
 
 Next up, I want to build a simple frontend to query the transcript database directly. This will allow me to search across everything that's been discussed across all episodes, not just get the weekly digest. It would also be interesting to look at trends overtime, as I start acquiring more transcripts and data.
+
+## Example digest
+
+![Digest part 1](pictures/digest1.png)
+![Digest part 2](pictures/digest2.png)
+![Digest part 3](pictures/digest3.png)
+
+The email includes:
+- **Top 3 picks** with personalized explanations for why each episode fits my interests
+- **What happened in AI this week**: a 4-sentence synthesis from news podcasts
+- **Dad's pick**: a recommendation from news/politics podcasts for my dad and I to relate on
+- **All episodes this week** ranked by relevance score
