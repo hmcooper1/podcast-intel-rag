@@ -71,8 +71,8 @@ The email includes:
 - **All episodes this week** ranked by relevance score
 
 <p align="center">
-  <img src="digest_images/digest1.png" width="600"/>
-  <img src="digest_images/digest2.png" width="600"/>
-  <img src="digest_images/digest3.png" width="600"/>
-  <img src="digest_images/digest4.png" width="600"/>
+  <img src="digest_images/digest1.png"/>
+  <img src="digest_images/digest2.png"/>
+  <img src="digest_images/digest3.png"/>
+  <img src="digest_images/digest4.png"/>
 </p>
