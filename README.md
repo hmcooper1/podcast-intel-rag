@@ -64,9 +64,9 @@ Next up, I want to build a simple frontend to query the transcript database dire
 
 ## Example digest
 
-![Digest part 1](pictures/digest1.png)
-![Digest part 2](pictures/digest2.png)
-![Digest part 3](pictures/digest3.png)
+![Digest part 1](digest_images/digest1.png)
+![Digest part 2](digest_images/digest2.png)
+![Digest part 3](digest_images/digest3.png)
 
 The email includes:
 - **Top 3 picks** with personalized explanations for why each episode fits my interests
