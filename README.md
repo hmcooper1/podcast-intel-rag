@@ -70,7 +70,9 @@ The email includes:
 - **Dad's pick**: a recommendation from news/politics podcasts for my dad and I to relate on
 - **All episodes this week** ranked by relevance score
 
-![Digest part 1](digest_images/digest1.png)
-![Digest part 2](digest_images/digest2.png)
-![Digest part 3](digest_images/digest3.png)
-![Digest part 3](digest_images/digest4.png)
+<p align="center">
+  <img src="digest_images/digest1.png" width="600"/>
+  <img src="digest_images/digest2.png" width="600"/>
+  <img src="digest_images/digest3.png" width="600"/>
+  <img src="digest_images/digest4.png" width="600"/>
+</p>
