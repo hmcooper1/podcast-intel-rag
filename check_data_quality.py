@@ -2,6 +2,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from supabase import create_client
+from email_digest import send_email
 
 load_dotenv()
 supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
@@ -33,6 +34,7 @@ def check_missing_fields():
             print(issue)
     else:
         print("  All episodes this week have required fields.")
+    return issues
 
 def check_episodes_have_chunks():
     """
@@ -57,8 +59,17 @@ def check_episodes_have_chunks():
             print(issue)
     else:
         print("  All episodes this week have chunks.")
+    return issues
 
 def run_all_checks():
     print("\n=== Data Quality Checks ===")
-    check_missing_fields()
-    check_episodes_have_chunks()
+    all_issues = check_missing_fields() + check_episodes_have_chunks()
+
+    # if any issues found, send an alert email in case I don't manually check logs that week
+    if all_issues:
+        body = "Data quality issues found in this week's pipeline run:\n\n" + "\n".join(all_issues)
+        send_email(
+            subject="Podcast Intel: Data Quality Issues",
+            plain_body=body,
+            html_body=f"<pre>{body}</pre>"
+        )

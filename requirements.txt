@@ -5,3 +5,4 @@ python-dotenv==1.2.2
 supabase==2.28.2
 openai-whisper==20250625
 pytest==9.0.2
+ragas

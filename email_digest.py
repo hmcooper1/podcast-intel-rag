@@ -171,18 +171,23 @@ def search_query(query: str, limit: int = 10) -> list[dict]:
     }).execute()
     return result.data
  
-def search_all_queries(queries: list[str]) -> list[dict]:
+def search_all_queries(queries: list[str]) -> tuple[list[dict], dict]:
     """
     Run each search query and combine results into one deduplicated list.
     If the same chunk appears for multiple queries, keeps the highest weight.
-    Returns a list of chunk dicts with id, episode_title, podcast_name, weight etc.
+    Returns:
+      - all_chunks: deduplicated list of chunk dicts for scoring episodes
+      - per_query_contexts: dict of query -> list of chunk texts, for RAGAS eval
     """
     # use dict keyed by chunk id to easily find and update duplicates
     chunks_by_id = {}
+    # store raw chunk texts per query for RAGAS context precision evaluation
+    per_query_contexts = {}
 
     # for each query, get matching chunks and add to dict, keeping highest weight if duplicate
     for query, weight in queries:
         chunks = search_query(query, CHUNKS_PER_QUERY)
+        per_query_contexts[query] = [c["chunk_text"] for c in chunks]
         for chunk in chunks:
             cid = chunk["id"]
             if cid not in chunks_by_id:
@@ -193,7 +198,7 @@ def search_all_queries(queries: list[str]) -> list[dict]:
                 # chunk already seen from another query — keep the higher weight
                 chunks_by_id[cid]["weight"] = max(chunks_by_id[cid]["weight"], weight)
 
-    return list(chunks_by_id.values())
+    return list(chunks_by_id.values()), per_query_contexts
 
 def score_episodes(chunks: list[dict]) -> dict:
     """
@@ -557,7 +562,7 @@ def generate_digest():
 
     # 3: run all search queries and collect chunks
     print(f"Running {len(SEARCH_QUERIES)} preference searches...\n")
-    all_chunks = search_all_queries(SEARCH_QUERIES)
+    all_chunks, per_query_contexts = search_all_queries(SEARCH_QUERIES)
     print(f"Found {len(all_chunks)} unique relevant chunks\n")
 
     # 4: score episodes by how many chunks matched
@@ -571,7 +576,18 @@ def generate_digest():
     print("Generating recommendations...")
     recommendations = get_top_episode_recommendations(scored_episodes, USER_PREFERENCES)
 
-    # 6: build full episode list - scored first (in order), then unscored at the bottom
+    # 6: save per-query contexts to supabase for ragas context precision scoring
+    print("Saving eval data...")
+    run_date = datetime.now(timezone.utc).date().isoformat()
+    for query, contexts in per_query_contexts.items():
+        supabase.table("eval_query_runs").insert({
+            "run_date": run_date,
+            "query": query,
+            "contexts": contexts,
+        }).execute()
+    print(f"  Saved {len(per_query_contexts)} query runs for {run_date}\n")
+
+    # 7: build full episode list - scored first (in order), then unscored at the bottom
     all_episodes = get_all_episodes()
     episode_list = ""
     for i, (title, data) in enumerate(scored_episodes.items(), start=1):
@@ -581,7 +597,7 @@ def generate_digest():
     for title in unscored:
         episode_list += f"- {title} ({all_episodes[title]})\n"
 
-    # 7: build full digest string (backup in case HTML cannot render)
+    # 8: build full digest string (backup in case HTML cannot render)
     digest = f"""
 =====================================
 PODCAST INTEL DIGEST: {week_of}
