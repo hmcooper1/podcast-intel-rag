@@ -4,7 +4,7 @@ I absolutely love podcasts! They are how I stay up-to-date on everything I am in
 
 To solve my problem, I built this end-to-end RAG pipeline that injests transcripts from 20+ podcasts weekly, searches them based on my interests, and emails me the top 3 relevant episodes for me to listen to. The pipeline also generates a short summary of news topics that are mentioned across podcasts - giving me insight into the top AI stories and advancements. My dad is also an avid podcast listener, so I added his 4 favorite shows and have the digest recommend whichever episode that week we would relate the most on!
 
-Through this project, I have got hands-on experience with RAG systems, vector embeddings, and AI evaluation. It's been a really fun project to work on, and listening to my recommended podcasts has become one of my favorite parts of my weekly routine :) I have been learning so many interesting things through these podcasts - from how tools like Claude Code and OpenClaw were built, to exciting AI applications in real-world evidence and SAS/R programming in pharma & biotechnology (my current role), to the latest agent frameworks and startups. The exposure to practical AI workflows has directly shaped how I work: I have been focused on developing reusable agent skills and workflows that I have been presenting to my colleagues to accelerate how our team works. It is honestly so much fun!!!
+Through this project, I have got hands-on experience with RAG systems, vector embeddings, and AI evaluation. It's been a really fun project to work on, and listening to my recommended podcasts has become one of my favorite parts of my weekly routine :) I have been learning so many interesting things through these podcasts - from how tools like Claude Code and OpenClaw were built, to exciting AI applications in real-world evidence and SAS/R programming in pharma & biotechnology (my current role), to the latest agent frameworks and startups. The exposure to practical AI workflows has directly shaped how I work - I have been focused on developing reusable agent skills and workflows that I have been presenting to my colleagues to accelerate how our team works. It is honestly so much fun!!!
 
 ## What it does
 
@@ -64,12 +64,13 @@ Next up, I want to build a simple frontend to query the transcript database dire
 
 ## Example digest
 
-![Digest part 1](digest_images/digest1.png)
-![Digest part 2](digest_images/digest2.png)
-![Digest part 3](digest_images/digest3.png)
-
 The email includes:
 - **Top 3 picks** with personalized explanations for why each episode fits my interests
 - **What happened in AI this week**: a 4-sentence synthesis from news podcasts
 - **Dad's pick**: a recommendation from news/politics podcasts for my dad and I to relate on
 - **All episodes this week** ranked by relevance score
+
+![Digest part 1](digest_images/digest1.png)
+![Digest part 2](digest_images/digest2.png)
+![Digest part 3](digest_images/digest3.png)
+![Digest part 3](digest_images/digest4.png)
