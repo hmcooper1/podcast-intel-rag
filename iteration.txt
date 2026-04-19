@@ -1,0 +1,3 @@
+4.19.26:
+* update preferences to relate more to data science as well and to make more concise
+* be more explicit about not having mutliple AI daily brief episodes hahaha

@@ -264,6 +264,8 @@ and excerpts from the matching chunks.
  
 Select the top {TOP_N_EPISODES} DISTINCT episodes most valuable for this user.
 STRICT RULE: Only ONE episode per podcast allowed across all {TOP_N_EPISODES} recommendations. No exceptions.
+STRICT RULE: Never include more than one episode from "The AI Daily Brief" — even if the episodes are highly relevant.
+I want to get variety of recommendations from different podcasts, and will be able to browse all the episodes at the bottom of the email anyway.
 DO NOT recommend the same episode more than once.
 For each, explain SPECIFICALLY why it matches their interests — reference
 both the episode content AND their stated preferences.
