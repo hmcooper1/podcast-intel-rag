@@ -1,8 +1,10 @@
 # Podcast Intel RAG
 
-I absolutely love podcasts! They are how I stay up-to-date on everything I am interested in, from daily news (Up First by NPR and The Daily), biotechnology advancements (The Readout Loud), UK-specific news (Pod Save the UK, since I'm currently based in the UK), and health policy (Health Affairs This Week). Beyond being an avid daily and weekly listener to these shows, I have been obsessed with data & AI related content. I started out loving the DataFramed podcast by DataCamp, but stumbled upon other interesting shows (How I AI, The AI Daily Brief, and many more - see `podcasts.py`). It would take far too much time to listen to every episode from every podcast. Even manually searching up each podcast to see the titles and descriptions of all episodes for the week is extremely time consuming and unrealistic for 20+ shows (some of which post multiple times a week). Additionally, certain topics that are mentioned during the show (e.g. advice for earlier careers) likely wouldn't be in the description of the episode, but it something I would definitely want to listen to.
+![Tests](https://github.com/hmcooper1/podcast-intel-rag/actions/workflows/tests.yml/badge.svg)
 
-To solve my problem, I built this end-to-end RAG pipeline that injests transcripts from 20+ podcasts weekly, searches them based on my interests, and emails me the top 3 relevant episodes for me to listen to. The pipeline also generates a short summary of news topics that are mentioned across podcasts - giving me insight into the top AI stories and advancements. My dad is also an avid podcast listener, so I added his 4 favorite shows and have the digest recommend whichever episode that week we would relate the most on!
+I absolutely love podcasts! They are how I stay up-to-date on everything I am interested in, from daily news (Up First by NPR and The Daily), biotechnology advancements (The Readout Loud), and health policy (Health Affairs This Week). Beyond being an avid daily and weekly listener to these shows, I have been obsessed with data & AI related content. I started out loving the DataFramed podcast by DataCamp, but stumbled upon other interesting shows (How I AI, The AI Daily Brief, and many more - see `podcasts.py`). It would take far too much time to listen to every episode from every podcast, and even manually searching up each podcast to see the titles and descriptions of all episodes for the week is extremely time consuming. Certain topics that are mentioned during the show (e.g. advice for earlier careers) likely wouldn't be in the description of the episode, but is something I would definitely want to listen to.
+
+To solve my problem, I built this end-to-end RAG pipeline that injests transcripts from 20+ podcasts weekly, searches them based on my interests, and emails me the top 3 relevant episodes to listen to. The pipeline also generates a short summary of news topics that are mentioned across podcasts - giving me insight into the top AI stories and advancements. My dad is also an avid podcast listener, so I added his 4 favorite shows and have the digest recommend whichever episode that week we would relate the most on!
 
 Through this project, I have got hands-on experience with RAG systems, vector embeddings, and AI evaluation. Reading my digest every Sunday morning with my green tea and listening to all my recommended podcasts has become one of my favorite parts of my weekly routine :) I have been learning so many interesting things through these podcasts - from how tools like Claude Code and OpenClaw were built, to exciting AI applications in real-world evidence and SAS/R programming in pharma & biotechnology (my current role), to the latest agent frameworks and startups. The exposure to practical AI workflows has directly shaped how I work - I have been focused on developing reusable agent skills and workflows that I have been presenting to my colleagues to accelerate how our team works. It is honestly so much fun!!!
 
@@ -28,7 +30,8 @@ It also validates data quality after each run and emails an alert if anything lo
 - **OpenAI**: embeddings (`text-embedding-3-small`) and recommendations (`gpt-4o`)
 - **Supabase + pgvector**: vector storage and similarity search
 - **RAGAS**: retrieval evaluation (context precision)
-- **GitHub Actions**: weekly scheduled pipeline runs
+- **GitHub Actions**: weekly scheduled pipeline runs and CI test suite
+- **pytest**: tests for the helper functions that don't need API calls (chunking, scoring, parsing)
 - **Python**: everything else
 
 ## How retrieval works
@@ -41,8 +44,8 @@ Retrieval quality is tracked in a `eval_query_runs` table and scored with RAGAS 
 
 - **Data quality checks**: runs automatically after every pipeline execution and emails an alert if any episodes are missing required fields or have no chunks
 - **RAGAS context precision**: scores how relevant the retrieved chunks are to each search query after every run, which validates that the retrieval step is surfacing meaningful content related to my queries. Scores are stored in Supabase so I can track whether changes to queries, weights, or retrieval params actually improve results
-- **Manual pipeline run**: ran the full pipeline manually to verify that audio downloads, transcripts, chunks, and embeddings all look correct end to end before relying on the automated schedule
-- **Manual digest review**: I check the recommendations each week to see if they actually feel relevant to me, which is ultimately the real test!
+- **Unit tests**: tests for the helper functions that don't need API calls (chunking, filename parsing, HTML stripping, etc.) which run automatically on every push via GitHub Actions
+- **Manual digest review**: I check the recommendations each week to see if they actually feel relevant to me, which is some of the most important feedback!
 
 ## Project structure
 
@@ -53,9 +56,10 @@ transcribe.py         # Whisper transcription
 embed.py              # chunking + embeddings + Supabase insert
 email_digest.py       # retrieval, ranking, LLM calls, email
 check_data_quality.py # validates this week's data
-eval.py               # RAGAS context precision scoring
+rag_eval.py           # RAGAS context precision scoring
 podcasts.py           # podcast list and metadata
 preferences.py        # my interests and search queries
+tests/                # unit tests
 ```
 
 ## What's next
