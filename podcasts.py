@@ -160,6 +160,15 @@ PODCASTS = [
         "hosts": ["Slawomir Tulski"],
         "rss_feed": "https://anchor.fm/s/41286f68/podcast/rss",
     },
+    {
+        "id": "lennys_podcast",
+        "name": "Lenny's Podcast: Product | Career | Growth",
+        "description": "Interviews with world-class product leaders and growth experts for actionable advice",
+        "category": "interview",
+        "release_schedule": "Biweekly",
+        "hosts": ["Lenny Rachitsky"],
+        "rss_feed": "https://api.substack.com/feed/podcast/10845.rss",
+    },
 
 # news ------------------------------------------------
     {
