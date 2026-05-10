@@ -37,7 +37,7 @@ def eval_context_precision():
 
         dataset = EvaluationDataset(samples=[sample])
         # without reference bc uses llm as a judge
-        result = evaluate(dataset, metrics=[LLMContextPrecisionWithoutReference])
+        result = evaluate(dataset, metrics=[LLMContextPrecisionWithoutReference()])
 
         score = result["llm_context_precision_without_reference"]
         # write context precision score back to supabase table
