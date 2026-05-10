@@ -70,7 +70,7 @@ Next up, I want to build a simple frontend to query the transcript database dire
 
 The email includes:
 - **Top 3 picks** with personalized explanations for why each episode fits my interests
-- **What happened in AI this week**: a 4-sentence synthesis from news podcasts
+- **What happened in AI this week**: a few sentence synthesis from news podcasts
 - **Dad's pick**: a recommendation from news/politics podcasts for my dad and I to relate on
 - **All episodes this week** ranked by relevance score
 
