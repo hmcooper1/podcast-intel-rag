@@ -1,58 +1,36 @@
 import streamlit as st
-from openai import OpenAI
-from supabase import create_client
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
+from agent import run_agent
 
 st.title("Data and AI Podcast App")
 
-openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
-
-if "openai_model" not in st.session_state:
-    st.session_state["openai_model"] = "gpt-4o"
-
-# initalize chat history
+# initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# display chat messages from history on app rerun (user: hi)
+# display chat messages from history on app rerun
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
 # accept user input
 if prompt := st.chat_input("Ask me anything"):
-    # display user message in chat message container
+    # display user message
     with st.chat_message("user"):
         st.markdown(prompt)
-    # add user message to chat history
     st.session_state.messages.append({"role": "user", "content": prompt})
 
-    # display assistant response in chat message container
+    # run the agent and display the response
     with st.chat_message("assistant"):
-        
-        # send prompt to gpt-40
-        stream = openai_client.chat.completions.create(
-            model=st.session_state["openai_model"],
-            # send all the past messages from entire conversation to gpt-40
-            messages=[
-                {"role": "system", "content": """
-You are a helpful assistant for a podcast knowledge base.
-You have access to transcripts from 20+ AI/ML podcasts covering topics like
-machine learning, AI engineering, data science, and biotech AI.
-Answer questions about podcast content, episodes, guests, and topics.
-If you don't have enough information to answer, say so honestly.
-"""},
-                *[{"role": m["role"], "content": m["content"]}
-                  for m in st.session_state.messages],
-            ],
-            # get entire response at once
-            stream=True,
-        )
-        response = st.write_stream(stream)
+        response, tool_calls = run_agent(st.session_state.messages)
+        st.markdown(response)
 
-    # add assistant response to chat history
+        # show which tools were called, if any
+        if tool_calls:
+            with st.expander("Sources"):
+                for call in tool_calls:
+                    st.write(f"**Tool:** {call['name']}")
+                    st.write(f"**Query:** {call['args']}")
+                    for chunk in call["result"]:
+                        st.write(f"- {chunk['episode_title']} ({chunk['podcast_name']}): {chunk['chunk_text'][:200]}...")
+
     st.session_state.messages.append({"role": "assistant", "content": response})
