@@ -3,7 +3,7 @@ import json
 from dotenv import load_dotenv
 from openai import OpenAI
 from supabase import create_client
-from podcasts import PODCASTS
+from .podcasts import PODCASTS
 
 load_dotenv(dotenv_path=".env")
 

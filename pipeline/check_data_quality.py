@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from supabase import create_client
-from email_digest import send_email
+from .email_digest import send_email
 
 load_dotenv()
 supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))

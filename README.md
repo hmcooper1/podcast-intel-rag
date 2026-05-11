@@ -50,21 +50,26 @@ Retrieval quality is tracked in a `eval_query_runs` table and scored with RAGAS 
 ## Project structure
 
 ```
-run_pipeline.py       # runs all steps in order
-fetch_audio.py        # parses RSS feeds and downloads audio
-transcribe.py         # Whisper transcription
-embed.py              # chunking + embeddings + Supabase insert
-email_digest.py       # retrieval, ranking, LLM calls, email
-check_data_quality.py # validates this week's data
-rag_eval.py           # RAGAS context precision scoring
-podcasts.py           # podcast list and metadata
-preferences.py        # my interests and search queries
-tests/                # unit tests
+run_pipeline.py          # runs all pipeline steps in order
+pipeline/
+  fetch_audio.py         # parses RSS feeds and downloads audio
+  transcribe.py          # Whisper transcription
+  embed.py               # chunking + embeddings + Supabase insert
+  email_digest.py        # retrieval, ranking, LLM calls, email
+  check_data_quality.py  # validates this week's data
+  rag_eval.py            # RAGAS context precision scoring
+  podcasts.py            # podcast list and metadata
+  preferences.py         # my interests and search queries
+app/
+  app.py                 # Streamlit chat UI
+  agent.py               # agent loop and tool definitions
+  tools.py               # Supabase query functions
+tests/                   # unit tests
 ```
 
 ## What's next
 
-Next up, I want to build a simple frontend to query the transcript database directly. This will allow me to search across everything that's been discussed across all episodes, not just get the weekly digest. It would also be interesting to look at trends overtime, as I start acquiring more transcripts and data.
+I am currently building a simple frontend to query the transcript database directly. This will allow me to search across everything that's been discussed across all episodes, not just get the weekly digest. I plan to use this to be able to look at trends overtime, ask about certain specific topics, and compare themes across shows.
 
 ## Example digest
 

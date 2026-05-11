@@ -1,4 +1,4 @@
-from fetch_audio import sanitize_filename, strip_html, parse_duration
+from pipeline.fetch_audio import sanitize_filename, strip_html, parse_duration
 
 class TestSanitizeFilename:
     def test_removes_special_chars(self):

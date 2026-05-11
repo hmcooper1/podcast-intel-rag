@@ -3,9 +3,9 @@ from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from openai import OpenAI
 from supabase import create_client
-from preferences import USER_PREFERENCES, SEARCH_QUERIES
-from podcasts import DAD_PODCASTS
-from fetch_audio import strip_html
+from .preferences import USER_PREFERENCES, SEARCH_QUERIES
+from .podcasts import DAD_PODCASTS
+from .fetch_audio import strip_html
 import feedparser
 # simple mail transfer protocol library for sending emails
 import smtplib

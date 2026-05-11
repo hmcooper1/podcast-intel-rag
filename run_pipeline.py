@@ -1,9 +1,9 @@
-import fetch_audio
-import transcribe
-import embed
-import email_digest
-import check_data_quality
-import rag_eval
+from pipeline import fetch_audio
+from pipeline import transcribe
+from pipeline import embed
+from pipeline import email_digest
+from pipeline import check_data_quality
+from pipeline import rag_eval
 
 def main():
     print("=== Step 1: Fetch ===")

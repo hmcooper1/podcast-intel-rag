@@ -1,4 +1,4 @@
-from email_digest import score_episodes
+from pipeline.email_digest import score_episodes
 
 def make_chunk(id, title, podcast, weight=1.0):
     return {

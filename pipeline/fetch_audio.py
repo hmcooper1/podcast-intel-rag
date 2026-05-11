@@ -5,7 +5,7 @@ import re
 import json
 from datetime import datetime, timedelta, timezone
 from html.parser import HTMLParser
-from podcasts import PODCASTS
+from .podcasts import PODCASTS
 
 # Config -----------------------------------------------------
 OUTPUT_DIR = "audio"

@@ -1,4 +1,4 @@
-from embed import chunk_text, parse_filename
+from pipeline.embed import chunk_text, parse_filename
 
 class TestChunkText:
     def test_basic_split(self):
