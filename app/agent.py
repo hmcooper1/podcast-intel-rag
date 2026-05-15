@@ -2,7 +2,7 @@ import json
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
-from tools import semantic_search
+from tools import semantic_search, list_podcasts, get_episodes
 
 load_dotenv()
 
@@ -19,8 +19,8 @@ If you don't have enough information to answer, say so honestly.
 
 # tool schemaa: tells openai what tools exist and what arguments they take
 TOOLS = [
+    # semantic search
     {
-        # semantic search
         "type": "function",
         "function": {
             "name": "semantic_search",
@@ -45,12 +45,49 @@ TOOLS = [
                 "required": ["query"],
             },
         },
-    }
+    },
+    # return all podcast names available in database
+    {
+        "type": "function",
+        "function": {
+            "name": "list_podcasts",
+            "description": "Return all podcast names available in the database. Use this when the user asks what podcasts are available.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+            },
+        },
+    },
+    # return episodes from a specific podcast
+    {
+        "type": "function",
+        "function": {
+            "name": "get_episodes",
+            "description": "Return recent episodes from a specific podcast. Use this when the user asks about episodes from a named podcast.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "podcast_name": {
+                        "type": "string",
+                        "description": "The name of the podcast to look up episodes for",
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Number of episodes to return. Default 5.",
+                    },
+                },
+                "required": ["podcast_name"],
+            },
+        },
+    },
 ]
 
 # maps tool name -> actual python function defined in tools.py
 TOOL_MAP = {
     "semantic_search": semantic_search,
+    "list_podcasts": list_podcasts,
+    "get_episodes": get_episodes,
 }
 
 # agent loop

@@ -29,8 +29,15 @@ if prompt := st.chat_input("Ask me anything"):
             with st.expander("Sources"):
                 for call in tool_calls:
                     st.write(f"**Tool:** {call['name']}")
-                    st.write(f"**Query:** {call['args']}")
-                    for chunk in call["result"]:
-                        st.write(f"- {chunk['episode_title']} ({chunk['podcast_name']}): {chunk['chunk_text'][:200]}...")
+                    st.write(f"**Args:** {call['args']}")
+                    if call["name"] == "list_podcasts":
+                        for podcast in call["result"]:
+                            st.write(f"- {podcast}")
+                    elif call["name"] == "get_episodes":
+                        for episode in call["result"]:
+                            st.write(f"- {episode['episode_title']} ({episode['published_date']})")
+                    elif call["name"] == "semantic_search":
+                        for chunk in call["result"]:
+                            st.write(f"- {chunk['episode_title']} ({chunk['podcast_name']}): {chunk['chunk_text'][:200]}...")
 
     st.session_state.messages.append({"role": "assistant", "content": response})
