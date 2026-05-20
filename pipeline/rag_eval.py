@@ -39,7 +39,7 @@ def eval_context_precision():
         # without reference bc uses llm as a judge
         result = evaluate(dataset, metrics=[LLMContextPrecisionWithoutReference()])
 
-        score = result["llm_context_precision_without_reference"]
+        score = float(result["llm_context_precision_without_reference"][0])
         # write context precision score back to supabase table
         supabase.table("eval_query_runs").update({"context_precision": score}).eq("id", qrun["id"]).execute()
         print(f"  {qrun['run_date']} | '{qrun['query'][:50]}': {score:.2f}")
