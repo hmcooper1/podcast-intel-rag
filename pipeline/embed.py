@@ -1,4 +1,5 @@
 import os
+import re
 import json
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -20,6 +21,28 @@ supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
 
 # build a lookup dict from podcast id > podcast metadata for easy access
 PODCAST_LOOKUP = {p["id"]: p for p in PODCASTS}
+
+AD_PATTERNS = re.compile("|".join([
+    r"brought to you by",
+    r"today'?s sponsor",
+    r"sponsored by",
+    r"use code\s+\w+",
+    r"head to\s+\S+\.(com|ai|io)",
+    r"\S+\.(com|ai|io)\s+slash",
+    r"www\.\S+",
+    r"\d+%\s*off",
+    r"first\s+(three|3)\s+months?\s+free",
+    r"check out\s+\S+\.(com|ai|io)",
+]), re.IGNORECASE)
+
+def clean_transcript(text: str) -> str:
+    """Remove sponsor/ad sentences from transcript text before chunking."""
+    sentences = re.split(r"(?<=[.!?])\s+", text)
+    clean = [s for s in sentences if not AD_PATTERNS.search(s)]
+    removed = len(sentences) - len(clean)
+    if removed > 0:
+        print(f"  Removed {removed} ad sentence(s) from transcript")
+    return " ".join(clean)
 
 def chunk_text(text: str, chunk_size: int, overlap: int) -> list[str]:
     """Split text into overlapping chunks of chunk_size words with chunk_overlap."""
@@ -107,6 +130,7 @@ def embed_transcript(filename: str):
     with open(filepath, "r") as f:
         text = f.read()
 
+    text = clean_transcript(text)
     chunks = chunk_text(text, CHUNK_SIZE, CHUNK_OVERLAP)
     print(f"  Split into {len(chunks)} chunks")
 

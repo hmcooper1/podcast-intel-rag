@@ -181,13 +181,15 @@ def search_all_queries(queries: list[str]) -> tuple[list[dict], dict]:
     """
     # use dict keyed by chunk id to easily find and update duplicates
     chunks_by_id = {}
-    # store raw chunk texts per query for RAGAS context precision evaluation
+    # store raw chunk texts and similarity scores per query for RAGAS context precision scoring
     per_query_contexts = {}
+    per_query_scores = {}
 
     # for each query, get matching chunks and add to dict, keeping highest weight if duplicate
     for query, weight in queries:
         chunks = search_query(query, CHUNKS_PER_QUERY)
         per_query_contexts[query] = [c["chunk_text"] for c in chunks]
+        per_query_scores[query] = [c["similarity"] for c in chunks]
         for chunk in chunks:
             cid = chunk["id"]
             if cid not in chunks_by_id:
@@ -586,6 +588,7 @@ def generate_digest():
             "run_date": run_date,
             "query": query,
             "contexts": contexts,
+            "similarity_scores": per_query_scores[query],
         }).execute()
     print(f"  Saved {len(per_query_contexts)} query runs for {run_date}\n")
 

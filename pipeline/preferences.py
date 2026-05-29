@@ -1,6 +1,6 @@
 SEARCH_QUERIES = [
-    ("early career and new graduate career advice", 2.0),                      # double weight
-    ("biotech, pharma, and health AI applications", 2.0),                      # double weight
+    ("early career and new graduate experiences and career advice", 2.0),      # double weight
+    ("AI in healthcare, biotech, and pharma", 2.0),                            # double weight
     ("data science and AI overlap skills and practical advice", 1.0),
     ("practical AI tools apply real world corporate environment", 1.0),
 ]
