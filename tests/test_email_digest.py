@@ -42,8 +42,9 @@ class TestScoreEpisodes:
     def test_empty_chunks_returns_empty(self):
         assert score_episodes([]) == {}
 
-    def test_excerpts_truncated_to_300_chars(self):
+    def test_excerpts_truncated_to_100_words(self):
         long_chunk = make_chunk("1", "Intro to AI Engineering", "The AI Daily Brief")
-        long_chunk["chunk_text"] = "x" * 400
+        long_chunk["chunk_text"] = " ".join(["word"] * 150)  # 150 words
         result = score_episodes([long_chunk])
-        assert len(result["Intro to AI Engineering"]["excerpts"][0]) == 300
+        excerpt = result["Intro to AI Engineering"]["excerpts"][0]
+        assert len(excerpt.split()) == 100
