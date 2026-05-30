@@ -57,13 +57,13 @@ def chunk_text(text: str, chunk_size: int, overlap: int) -> list[str]:
  
     return chunks
 
-def get_embedding(text: str) -> list[float]:
-    """Get embedding vector from OpenAI for a chunk of text."""
+def get_embeddings(texts: list[str]) -> list[list[float]]:
+    """Get embedding vectors from OpenAI for a list of texts in one API call."""
     response = openai_client.embeddings.create(
-        input=text,
+        input=texts,
         model=EMBEDDING_MODEL
     )
-    return response.data[0].embedding
+    return [r.embedding for r in response.data]
 
 def already_embedded(episode_title: str) -> bool:
     """Check if an episode has already been embedded by looking it up in the episodes table.
@@ -134,10 +134,9 @@ def embed_transcript(filename: str):
     chunks = chunk_text(text, CHUNK_SIZE, CHUNK_OVERLAP)
     print(f"  Split into {len(chunks)} chunks")
 
-    # embed each chunk and store in Supabase
-    for i, chunk in enumerate(chunks):
-        embedding = get_embedding(chunk)
-
+    # embed all chunks per ep in one API call, then store in Supabase
+    embeddings = get_embeddings(chunks)
+    for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
         # only store chunk-specific data — episode metadata lives in the episodes table
         supabase.table("chunks").insert({
             "episode_id": episode_id,

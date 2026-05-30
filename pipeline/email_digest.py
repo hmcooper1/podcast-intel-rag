@@ -21,7 +21,7 @@ TOP_N_EPISODES = 3
 CHUNKS_PER_QUERY = 10   # chunks to retrieve per search query
 TOP_EPISODES_TO_LLM = 6 # top scoring episodes to send to LLM
 EMBEDDING_MODEL = "text-embedding-3-small"
-LLM_MODEL = "gpt-4o"
+LLM_MODEL = "gpt-5"
 # ------------------------------------------------------------
 
 # ------------------------------------------------------------
@@ -221,7 +221,7 @@ def score_episodes(chunks: list[dict]) -> dict:
                 "excerpts": []
             }
         episodes[title]["score"] += chunk.get("weight", 1.0)
-        episodes[title]["excerpts"].append(chunk["chunk_text"][:300])
+        episodes[title]["excerpts"].append(" ".join(chunk["chunk_text"].split()[:100]))
  
     # convert dict to (key, value) pairs, sort by score, and convert back to dict
     return dict(sorted(episodes.items(), key=lambda x: x[1]["score"], reverse=True))
@@ -273,7 +273,7 @@ For each, explain SPECIFICALLY why it matches their interests — reference
 both the episode content AND their stated preferences.
  
 When selecting the top {TOP_N_EPISODES} episodes, prioritize in this order:
-1. Early career / breaking into AI engineering
+1. Early career and new graduate experiences and advice
 2. Biotech, pharma, or health and AI intersection
 3. Practical AI tools and workflows
 4. AI agents and deployment (only if nothing better matches above)
