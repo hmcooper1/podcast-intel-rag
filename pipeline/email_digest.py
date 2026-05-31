@@ -77,7 +77,6 @@ Episodes:
     response = openai_client.chat.completions.create(
         model=LLM_MODEL,
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.3  # lower = more factual, less creative
     )
     return response.choices[0].message.content
 
@@ -139,7 +138,6 @@ Episodes:
     response = openai_client.chat.completions.create(
         model=LLM_MODEL,
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.3
     )
     return response.choices[0].message.content
 
