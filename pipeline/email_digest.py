@@ -198,7 +198,7 @@ def search_all_queries(queries: list[str]) -> tuple[list[dict], dict]:
                 # chunk already seen from another query — keep the higher weight
                 chunks_by_id[cid]["weight"] = max(chunks_by_id[cid]["weight"], weight)
 
-    return list(chunks_by_id.values()), per_query_contexts
+    return list(chunks_by_id.values()), per_query_contexts, per_query_scores
 
 def score_episodes(chunks: list[dict]) -> dict:
     """
@@ -564,7 +564,7 @@ def generate_digest():
 
     # 3: run all search queries and collect chunks
     print(f"Running {len(SEARCH_QUERIES)} preference searches...\n")
-    all_chunks, per_query_contexts = search_all_queries(SEARCH_QUERIES)
+    all_chunks, per_query_contexts, per_query_scores = search_all_queries(SEARCH_QUERIES)
     print(f"Found {len(all_chunks)} unique relevant chunks\n")
 
     # 4: score episodes by how many chunks matched
