@@ -11,8 +11,8 @@ load_dotenv(dotenv_path=".env")
 # Config -----------------------------------------------------
 TRANSCRIPTS_DIR = "transcripts"
 METADATA_DIR = "metadata"
-CHUNK_SIZE = 500
-CHUNK_OVERLAP = 50
+CHUNK_SIZE = 300 # 500
+CHUNK_OVERLAP = 30 # 50
 EMBEDDING_MODEL = "text-embedding-3-small"
 # ------------------------------------------------------------
 
@@ -28,11 +28,16 @@ AD_PATTERNS = re.compile("|".join([
     r"sponsored by",
     r"use code\s+\w+",
     r"head to\s+\S+\.(com|ai|io)",
+    r"go to\s+\S+\.(com|ai|io)",
     r"\S+\.(com|ai|io)\s+slash",
     r"www\.\S+",
     r"\d+%\s*off",
     r"first\s+(three|3)\s+months?\s+free",
     r"check out\s+\S+\.(com|ai|io)",
+    r"request\s+(a|an|your)\s+\w+\s+at\s+\S+\.(com|ai|io)",
+    r"see\s+(the\s+)?\w+\s+difference\s+at",
+    r"at datacamp",
+    r"start learning at\s+\S+",
 ]), re.IGNORECASE)
 
 def clean_transcript(text: str) -> str:

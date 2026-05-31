@@ -153,7 +153,7 @@ def get_embedding(text: str) -> list[float]:
     )
     return response.data[0].embedding
 
-def search_query(query: str, limit: int = 10) -> list[dict]:
+def search_query(query: str, limit: int = 15) -> list[dict]:
     """
     Embed a single query string and find the most similar chunks in Supabase.
     Total chunks returned is determined by the 'limit' parameter.
@@ -581,14 +581,18 @@ def generate_digest():
     # 6: save per-query contexts to supabase for ragas context precision scoring
     print("Saving eval data...")
     run_date = datetime.now(timezone.utc).date().isoformat()
-    for query, contexts in per_query_contexts.items():
-        supabase.table("eval_query_runs").insert({
-            "run_date": run_date,
-            "query": query,
-            "contexts": contexts,
-            "similarity_scores": per_query_scores[query],
-        }).execute()
-    print(f"  Saved {len(per_query_contexts)} query runs for {run_date}\n")
+    existing = supabase.table("eval_query_runs").select("id").eq("run_date", run_date).execute()
+    if existing.data:
+        print(f"  Eval data already saved for {run_date}, skipping.\n")
+    else:
+        for query, contexts in per_query_contexts.items():
+            supabase.table("eval_query_runs").insert({
+                "run_date": run_date,
+                "query": query,
+                "contexts": contexts,
+                "similarity_scores": per_query_scores[query],
+            }).execute()
+        print(f"  Saved {len(per_query_contexts)} query runs for {run_date}\n")
 
     # 7: build full episode list - scored first (in order), then unscored at the bottom
     all_episodes = get_all_episodes()
