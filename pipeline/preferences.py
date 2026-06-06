@@ -22,5 +22,5 @@ I am most interested in content that covers:
 I am less interested in:
 - High-level business strategy and investment news
 - Academic research without clear practical takeaways
-- Senior leadership and executive perspectives
+- Senior leadership and executive perspectives with no technical depth, especially C-suite or non-technical guests talking about AI adoption, transformation strategy, or organizational change at a surface level
 """
