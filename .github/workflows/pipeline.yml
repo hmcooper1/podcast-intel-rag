@@ -2,7 +2,7 @@ name: Weekly Podcast Pipeline
 
 on:
   schedule:
-    - cron: "0 23 * * 6"   # every saturday at 11pm UTC
+    - cron: "0 23 * * 5"   # every friday at 11pm UTC
   workflow_dispatch:       # creates "run workflow" button to allow manual runs from the github ui
 
 jobs:

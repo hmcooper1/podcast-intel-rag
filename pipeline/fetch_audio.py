@@ -113,6 +113,8 @@ def fetch_recent_episodes(podcast: dict, cutoff: datetime, output_dir: str):
     downloaded = 0
 
     for entry in feed.entries:
+        pub_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc) if entry.get("published_parsed") else None
+        print(f"    {entry.get('title', 'no title')[:60]} | {pub_date} | recent: {pub_date >= cutoff if pub_date else 'no date'}")
         if not is_recent(entry, cutoff):
             # some feeds are not in order, so don't break, just skip old episodes
             continue
