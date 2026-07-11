@@ -508,6 +508,8 @@ def build_html_email(week_of: str, recommendations: str, episode_list: str, week
 </html>"""
 
 
+RECIPIENT_EMAIL = "hannahmcooper19@gmail.com"
+
 def send_email(subject: str, plain_body: str, html_body: str):
     """Send the digest as an email to yourself via Gmail SMTP."""
     gmail_address = os.getenv("GMAIL_ADDRESS")
@@ -517,7 +519,7 @@ def send_email(subject: str, plain_body: str, html_body: str):
     # the email client picks whichever it can render (HTML if it can, plain text if not)
     msg = MIMEMultipart("alternative")
     msg["From"] = gmail_address
-    msg["To"] = gmail_address
+    msg["To"] = RECIPIENT_EMAIL
     msg["Subject"] = subject
 
     # plain text attached first bc email clients use the last attachment they support
@@ -528,9 +530,9 @@ def send_email(subject: str, plain_body: str, html_body: str):
     # connect to gmail's server with SSL (to encrypt) and send the email
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(gmail_address, app_password)
-        server.sendmail(gmail_address, gmail_address, msg.as_string())
+        server.sendmail(gmail_address, RECIPIENT_EMAIL, msg.as_string())
 
-    print(f"Email sent to {gmail_address}!")
+    print(f"Email sent to {RECIPIENT_EMAIL}!")
 
 # ------------------------------------------------------------
 # 4: Main function to run the whole pipeline and send the email
