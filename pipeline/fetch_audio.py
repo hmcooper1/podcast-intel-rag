@@ -41,9 +41,12 @@ def fetch_feed(rss_url: str) -> feedparser.FeedParserDict:
     """Fetch and parse the RSS feed. Uses requests to fetch content first so that
     feeds like Substack's API endpoint parse correctly with feedparser."""
     print(f"  Fetching feed: {rss_url}")
-    response = requests.get(rss_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=30)
-    feed = feedparser.parse(response.content)
-    return feed
+    try:
+        response = requests.get(rss_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=30)
+        return feedparser.parse(response.content)
+    except requests.exceptions.RequestException as e:
+        print(f"  Failed to fetch feed: {e}")
+        return feedparser.FeedParserDict(entries=[])
 
 def is_recent(entry: feedparser.FeedParserDict, cutoff: datetime) -> bool:
     """Check if an episode was published after the cutoff date."""
