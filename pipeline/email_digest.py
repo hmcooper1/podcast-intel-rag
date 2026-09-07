@@ -7,6 +7,7 @@ from .preferences import USER_PREFERENCES, SEARCH_QUERIES
 from .podcasts import DAD_PODCASTS
 from .fetch_audio import strip_html
 import feedparser
+import requests
 # simple mail transfer protocol library for sending emails
 import smtplib
 # email structure libraries for formatting the email content
@@ -537,6 +538,53 @@ def send_email(subject: str, plain_body: str, html_body: str):
 # ------------------------------------------------------------
 # 4: Main function to run the whole pipeline and send the email
 # ------------------------------------------------------------
+def log_to_notion(recommendations: str):
+    """
+    Parse the top 3 picks from the recommendations string and log each to Notion.
+    Each line starting with # is a new pick: "#1. Episode Title (Podcast Name)"
+    """
+    notion_token = os.getenv("NOTION_TOKEN")
+    database_id = os.getenv("NOTION_DATABASE_ID")
+
+    if not notion_token or not database_id:
+        print("  Notion credentials not set, skipping.")
+        return
+
+    headers = {
+        "Authorization": f"Bearer {notion_token}",
+        "Content-Type": "application/json",
+        "Notion-Version": "2022-06-28",
+    }
+
+    run_date = datetime.now().strftime("%Y-%m-%d")
+
+    for line in recommendations.strip().splitlines():
+        line = line.strip()
+        # picks start with #1., #2., #3.
+        if not line.startswith("#") or "." not in line:
+            continue
+        content = line.split(".", 1)[1].strip()
+        # format is "Episode Title (Podcast Name)"
+        if "(" not in content or not content.endswith(")"):
+            continue
+        title = content[:content.rfind("(")].strip()
+        podcast = content[content.rfind("(") + 1:-1].strip()
+
+        row = {
+            "parent": {"database_id": database_id},
+            "properties": {
+                "Episode Name": {"title": [{"text": {"content": title}}]},
+                "Channel": {"multi_select": [{"name": podcast}]},
+                "Date": {"date": {"start": run_date}},
+            },
+        }
+        response = requests.post("https://api.notion.com/v1/pages", headers=headers, json=row)
+        if response.status_code == 200:
+            print(f"  Logged to Notion: {title[:60]}")
+        else:
+            print(f"  Notion failed for '{title[:40]}': {response.status_code}")
+
+
 def generate_digest():
     """
     Run the full recommendation pipeline and send as email.
@@ -633,6 +681,12 @@ ALL EPISODES THIS WEEK (by relevance)
     # build the pretty html version and send both (email client picks whichever it supports)
     html_digest = build_html_email(week_of, recommendations, episode_list, weekly_summary, dad_rec, dad_episodes)
     send_email(subject=f"Podcast Intel Digest for {week_of}", plain_body=digest, html_body=html_digest)
+
+    print("Logging top picks to Notion...")
+    try:
+        log_to_notion(recommendations)
+    except Exception as e:
+        print(f"  Notion logging failed: {e}")
 
 if __name__ == "__main__":
     generate_digest()
