@@ -2,7 +2,7 @@ name: Keep Supabase Alive
 
 on:
   schedule:
-    - cron: "0 12 * * 3"  # every Wednesday at noon UTC
+    - cron: "0 12 * * *"  # every day at noon UTC
   workflow_dispatch:
 
 jobs:
@@ -21,8 +21,9 @@ jobs:
         run: |
           python - <<'EOF'
           import os
+          from datetime import datetime, timezone
           from supabase import create_client
           supabase = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
-          supabase.table("episodes").select("id").limit(1).execute()
+          supabase.table("ping").upsert({"id": 1, "pinged_at": datetime.now(timezone.utc).isoformat()}).execute()
           print("Supabase is alive!")
           EOF
