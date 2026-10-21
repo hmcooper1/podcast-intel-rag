@@ -6,7 +6,7 @@ I absolutely love podcasts! They are how I stay up-to-date on everything I am in
 
 To solve my problem, I built this end-to-end RAG pipeline that injests transcripts from 20+ podcasts weekly, searches them based on my interests, and emails me the top 3 relevant episodes to listen to. The pipeline also generates a short summary of news topics that are mentioned across podcasts - giving me insight into the top AI stories and advancements. My dad is an avid podcast listener, so I added his 4 favorite shows and have the digest recommend whichever episode that week we would relate the most on!
 
-Through this project, I have got hands-on experience with RAG systems, vector embeddings, and AI evaluation. Reading my digest every Sunday morning and listening to all my recommended podcasts has become one of my favorite parts of my weekly routine :) I have been learning so many interesting things through these podcasts - from how tools like Claude Code and OpenClaw were built, to exciting AI applications in real-world evidence and SAS/R programming in pharma & biotechnology (my current role), to the latest agent frameworks and startups. The exposure to practical AI workflows has directly shaped how I work - I have been focused on developing reusable agent skills and workflows that I have been presenting to my colleagues to accelerate how our team works. It is honestly so much fun!!!
+Through this project, I have got hands-on experience with RAG systems, vector embeddings, and AI evaluation. Reading my digest every Sunday morning and listening to all my recommended podcasts has become one of my favorite parts of my weekly routine :) I have been learning so many interesting things through these podcasts - from how tools like Claude Code and OpenClaw were built, to exciting AI applications in within healthcare & biotechnology, to practical early career advice. The exposure to practical AI workflows has directly shaped how I work - from building reusable agent skills to finding ways to bring AI into day-to-day workflows. It is so much fun!!!
 
 ## What it does
 
@@ -21,6 +21,7 @@ Every week, the pipeline:
 7. Generates a weekly AI news summary from news podcast descriptions
 8. Picks a recommendation from my dad's 4 podcast feeds based on the best tech/politics angle that week
 9. Emails the digest with all episodes listed from most to least relevant, so I can easily skim titles and decide what else to listen to
+10. Logs the top picks to a Notion database where I also leave my notes from the episodes to keep track over the weeks
 
 It also validates data quality after each run and emails an alert if anything looks off (missing fields, episodes with no chunks, etc.), and tracks retrieval quality over time using RAGAS context precision scoring.
 
@@ -30,6 +31,7 @@ It also validates data quality after each run and emails an alert if anything lo
 - **OpenAI**: embeddings (`text-embedding-3-small`) and recommendations (`gpt-4o`)
 - **Supabase + pgvector**: vector storage and similarity search
 - **RAGAS**: retrieval evaluation (context precision)
+- **Notion API**: logs top picks to a Notion database for a searchable record
 - **GitHub Actions**: weekly scheduled pipeline runs and CI test suite
 - **pytest**: tests for the helper functions that don't need API calls (chunking, scoring, parsing)
 - **Python**: everything else
