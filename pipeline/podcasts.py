@@ -169,6 +169,24 @@ PODCASTS = [
         "hosts": ["Lenny Rachitsky"],
         "rss_feed": "https://api.substack.com/feed/podcast/10845.rss",
     },
+    {
+        "id": "dwarkesh_podcast",
+        "name": "Dwarkesh Podcast",
+        "description": "Deeply researched interviews",
+        "category": "interview",
+        "release_schedule": "Weekly ish",
+        "hosts": ["Dwarkesh Patel"],
+        "rss_feed": "https://api.substack.com/feed/podcast/69345.rss",
+    },
+    {
+        "id": "machine_gods",
+        "name": "Machine Gods",
+        "description": "News, analysis, and interviews with the people who are building the AI future",
+        "category": "interview",
+        "release_schedule": "Twice a week",
+        "hosts": ["Kevin Roose", "Casey Newton"],
+        "rss_feed": "https://feeds.npr.org/g-s1-143588/podcast.xml",
+    },
 
 # news ------------------------------------------------
     {
@@ -212,7 +230,7 @@ PODCASTS = [
         "description": "Weekly tech and AI news by NYT tech journalists",
         "category": "news",
         "release_schedule": "Weekly on Friday",
-        "hosts": ["Kevin Roose", "Casey Newton"],
+        "hosts": ["Max Read"],
         "rss_feed": "https://feeds.simplecast.com/l2i9YnTd",
     },
 ]

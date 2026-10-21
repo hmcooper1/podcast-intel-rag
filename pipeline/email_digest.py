@@ -18,7 +18,7 @@ load_dotenv()
 
 # Config -----------------------------------------------------
 DAYS_BACK = 7
-TOP_N_EPISODES = 3
+TOP_N_EPISODES = 2
 CHUNKS_PER_QUERY = 10   # chunks to retrieve per search query
 TOP_EPISODES_TO_LLM = 6 # top scoring episodes to send to LLM
 EMBEDDING_MODEL = "text-embedding-3-small"

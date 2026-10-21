@@ -1,26 +1,26 @@
 SEARCH_QUERIES = [
-    ("early career and new graduate experiences and career advice", 2.0),      # double weight
-    ("AI in healthcare, biotech, and pharma", 2.0),                            # double weight
-    ("data science and AI overlap skills and practical advice", 1.0),
-    ("practical AI tools apply real world corporate environment", 1.0),
+    ("AI in healthcare, biotech, and pharma", 2.0),
+    ("practical AI tools and workflows for solutions engineers/solutions architects, and customer-facing technical roles", 2),
+    ("AI adoption, enterprise strategy, and storytelling for technical and business audiences", 1.0),
+    ("hands-on AI/ML engineering, model building, and technical implementation deep dives", 1.0),
 ]
 
 USER_PREFERENCES = """
-I am an early-career real-world evidence programmer in biotech.
-I am interested in three overlapping areas: how AI is transforming biotech and health
-(including applications relevant to my current role), applications of AI in data science, 
-and the AI engineering space more broadly.
+I am a Solutions Engineer/Solutions Architect at Databricks, working at the
+intersection of AI, data, and customer-facing technical work. I'm especially interested in
+how to position and tell the story of AI/data capabilities for business audiences, solutions
+engineering and architecture more broadly, and the ongoing intersection of AI and health/biotech.
 
 I am most interested in content that covers:
-- Early career advice for data scientists and AI engineers
-- AI applications in biotech, pharma, and health (including real-world evidence and SAS/R workflows)
-- Data science and AI engineering skills and practical career guidance
-- AI agent development, deployment, and the AI engineering role
+- AI applications in biotech, pharma, and health
+- High-level AI strategy, adoption, and storytelling - how organizations think about and communicate AI transformation, and how to translate technical capability into business value
+- Practical AI tools, workflows, and use cases relevant to solutions engineering, solutions architecture, and customer-facing technical roles
+- AI engineering and data platform trends, hands-on technical implementation, and practical career guidance
 - Practical AI tools, tutorials, and workflows applicable to real-life or corporate environments
-- Ethical considerations and responsible AI practices in biotech, health, and enterprise environments
+- Ethical considerations and responsible AI practices in health, biotech, and enterprise environments
+- Startup origin stories and how founders built successful AI/tech companies
 
 I am less interested in:
-- High-level business strategy and investment news
+- Investment and funding news (VC rounds, valuations, stock market coverage)
 - Academic research without clear practical takeaways
-- Senior leadership and executive perspectives with no technical depth, especially C-suite or non-technical guests talking about AI adoption, transformation strategy, or organizational change at a surface level
 """
